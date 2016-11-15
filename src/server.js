@@ -7,12 +7,14 @@ import fetch from 'node-fetch';
 const app = express();
 const router = express.Router();
 
+app.use('/assets', express.static('dist'));
+app.use('/assets', express.static('public'));
 app.use(express.static('dist'));
 
 app.get('/archive/:id(\\d+)', (req, res) => {
   console.log(req.params.id);
   const fullPage = (serverSideRenderingContent, initProps) => {
-    // const pops = safeStringify(initProps);
+    const props = initProps;
     return `
       <!doctype html>
       <html>
@@ -25,6 +27,8 @@ app.get('/archive/:id(\\d+)', (req, res) => {
           <div class="content">
             ${serverSideRenderingContent}
           </div>
+          <script>var app_props = ${props}</script>
+          <script src="/assets/bundle.js"></script>
         </body>
       </html>
     `;
@@ -40,13 +44,11 @@ app.get('/archive/:id(\\d+)', (req, res) => {
       console.dir(response);
     }
   }).then((json) => {
-    console.log(json.content.rendered);
-    const initProps = json.content.rendered;
-    const serverSideRenderingContent = ReactDOMServer.renderToString(<App data={initProps} />);
+    const initProps = { data: json };
+    console.log(initProps);
+    const serverSideRenderingContent = ReactDOMServer.renderToString(<App {...initProps} />);
     const renderFullPage = fullPage(serverSideRenderingContent, initProps);
-    res.send(
-      renderFullPage
-    );
+    res.status(200).send(renderFullPage);
   }).catch((response) => console.dir(response));
 });
 
