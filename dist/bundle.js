@@ -17170,9 +17170,7 @@ var App = function (_React$Component) {
     var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this));
 
     _this.state = {
-      title: props.data.title.rendered,
-      date: props.data.date,
-      content: props.data.content.rendered
+      archive: props.data
     };
     return _this;
   }
@@ -17181,7 +17179,7 @@ var App = function (_React$Component) {
     key: 'rawMarkup',
     value: function rawMarkup(contentType) {
       var converter = new _showdown2.default.Converter();
-      var rawMarkup = converter.makeHtml(this.state[contentType].toString());
+      var rawMarkup = converter.makeHtml(this.state.archive[contentType].rendered.toString());
       return { __html: rawMarkup };
     }
   }, {
@@ -17205,7 +17203,7 @@ var App = function (_React$Component) {
           _react2.default.createElement(
             'h2',
             null,
-            this.state.title
+            this.state.archive.title.rendered
           ),
           _react2.default.createElement(
             'p',
@@ -17213,7 +17211,7 @@ var App = function (_React$Component) {
             _react2.default.createElement(
               'date',
               null,
-              this.state.date
+              this.state.archive.date
             )
           ),
           _react2.default.createElement('div', { dangerouslySetInnerHTML: this.rawMarkup('content') })

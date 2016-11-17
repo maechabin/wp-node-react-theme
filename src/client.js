@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './jsx/app.jsx';
 
-const initProps = window.app_props;
+const preloadedState = window.__PRELOADED_STATE__;
 ReactDOM.render(
-  <App { ...initProps } />, document.querySelector('.content')
+  <App { ...preloadedState } />, document.querySelector('.content')
 );
