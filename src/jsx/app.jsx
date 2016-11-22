@@ -1,7 +1,5 @@
 import React from 'react';
-import { createStore } from 'redux';
-import { Provider, connect } from 'react-redux';
-import fetch from 'node-fetch';
+import { connect } from 'react-redux';
 import Showdown from 'showdown';
 
 export default class App extends React.Component {
