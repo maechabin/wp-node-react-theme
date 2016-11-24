@@ -21,37 +21,36 @@ function fetchData(id, callback) {
     mode: 'cors'
   }).then(response => {
     if (response.status === 200) {
-      return response.json();
+      return response.json()
+      .then(
+        json => callback(json)
+      )
     } else {
       return console.dir(response);
     }
-  }).then(
-    json => callback(json)
-  ).catch(
-    response => console.dir(response)
-  );
+  });
+}
+function appReducer(state, action) {
+  return state;
 }
 function handleRender(req, res) {
-  console.log(req);
+  // console.log(req);
   const id = req.params.id;
   fetchData(id, (apiResult) => {
-    let preloadedState = {{ data: apiResult }};
-    const store = createStore(preloadedState);
+    const preloadedState = { data: apiResult };
+    const store = createStore(appReducer, preloadedState);
     // console.log(preloadedState);
     const html = ReactDOMServer.renderToString(
-      <Provider store={sotre}>
+      <Provider store={store}>
         <App />
       </Provider>
     );
     const finalState = store.getState();
-    const renderedItem = {
-      finalState,
-      html,
-    };
-    res.status(200).send(renderFullPage(renderedItem));
+
+    res.status(200).send(renderFullPage(html, finalState));
   });
 }
-function renderFullPage(renderedItem) {
+function renderFullPage(html, finalState) {
   return `
     <!doctype html>
     <html>
@@ -62,10 +61,10 @@ function renderFullPage(renderedItem) {
 
       <body>
         <div class="content">
-          ${renderedItem.html}
+          ${html}
         </div>
         <script>
-          window.__PRELOADED_STATE__ = ${renderedItem.finaldState}
+          window.__PRELOADED_STATE__ = ${finalState}
         </script>
         <script src="/assets/bundle.js"></script>
       </body>
