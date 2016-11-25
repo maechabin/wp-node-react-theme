@@ -1,8 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App from './jsx/App';
+import reducer from './reducers';
+import App from './jsx/Archive.jsx';
 
 const preloadedState = window.__PRELOADED_STATE__;
+
+const store = createStore(reducer, preloadedState);
+
 ReactDOM.render(
-  <App { ...preloadedState } />, document.querySelector('.content')
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.querySelector('.content')
 );
