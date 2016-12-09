@@ -1,0 +1,28 @@
+redux と react-router での非同期API呼び出しを含む universal app の作り方
+http://qiita.com/amutake/items/a473e84f4c42fc6eb1c1
+
+Support asynchronous server rendering (waiting for data before rendering)
+https://github.com/facebook/react/issues/1739
+
+Server-Side Rendering with Redux and React-Router
+https://www.codementor.io/reactjs/tutorial/redux-server-rendering-react-router-universal-web-app
+
+renderToStringを２回実行してサーバーサイドレンダリングする
+http://qiita.com/59naga/items/9864d8772a5be09f4a4b
+
+Server Rendering - Server renderToString
+https://github.com/ReactTraining/react-router/blob/v2.0.0/docs/guides/ServerRendering.md
+
+Best async serverside loading technique?
+https://github.com/reactjs/redux/issues/99
+
+Server Rendering - Redux
+http://redux.js.org/docs/recipes/ServerRendering.html
+
+Quick Start Tutorial: Universal React, with Server Side Rendering
+https://medium.com/@firasd/quick-start-tutorial-universal-react-with-server-side-rendering-76fe5363d6e#.6gt16y22e
+
+
+
+
+export https_proxy=https://t_maeda:fancMaeda56@proxy.gate.fancs.com:8080

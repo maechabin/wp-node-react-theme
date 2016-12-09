@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default class App extends React.component {
+export default class App extends React.Component {
   render() {
     return (
       <div>
@@ -8,4 +8,7 @@ export default class App extends React.component {
       </div>
     );
   }
+}
+App.propTypes = {
+  children: React.PropTypes.object,
 }
