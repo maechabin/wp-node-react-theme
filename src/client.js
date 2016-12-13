@@ -7,7 +7,6 @@ import thunk from 'redux-thunk';
 
 import { routes, blogStore, createServerApp } from './universal';
 import { appReducer } from './reducers';
-import Archive from './jsx/Archive.jsx';
 
 const preloadedState = window.__PRELOADED_STATE__;
 const store = createStore(

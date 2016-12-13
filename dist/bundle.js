@@ -48486,24 +48486,41 @@ function extend() {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.updateArticle = updateArticle;
-exports.updateArticleAsync = updateArticleAsync;
-var UPDATE = 'UPDATE';
+exports.fetchArticle = fetchArticle;
+exports.fetchArticleAsync = fetchArticleAsync;
+exports.fetchIndex = fetchIndex;
+exports.fetchIndexAsync = fetchIndexAsync;
+var FETCH_ARTICLE = 'fetch_article';
+var FETCH_INDEX = 'fetch_index';
 
 // Action createStore
-function updateArticle(data) {
-  console.log('action!!!!!!!!!!!!!!!!!!');
+function fetchArticle(data) {
   return {
-    type: UPDATE,
+    type: FETCH_ARTICLE,
     data: data
   };
 }
-
-// thunk
-function updateArticleAsync(callback, id) {
+// redux-thunk
+function fetchArticleAsync(callback, id) {
   return function (dispatch) {
     return callback(id).then(function (apiResult) {
-      return dispatch(updateArticle(apiResult));
+      return dispatch(fetchArticle(apiResult));
+    });
+  };
+}
+
+// Action createStore
+function fetchIndex(data) {
+  return {
+    type: FETCH_INDEX,
+    data: data
+  };
+}
+// redux-thunk
+function fetchIndexAsync(callback) {
+  return function (dispatch) {
+    return callback().then(function (apiResult) {
+      return dispatch(fetchIndex(apiResult));
     });
   };
 }
@@ -48533,10 +48550,6 @@ var _universal = require('./universal');
 
 var _reducers = require('./reducers');
 
-var _Archive = require('./jsx/Archive.jsx');
-
-var _Archive2 = _interopRequireDefault(_Archive);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var preloadedState = window.__PRELOADED_STATE__;
@@ -48552,7 +48565,7 @@ _reactDom2.default.render(_react2.default.createElement(
   )
 ), document.querySelector('.content'));
 
-},{"./jsx/Archive.jsx":351,"./reducers":353,"./universal":354,"react":308,"react-dom":117,"react-redux":246,"react-router":277,"redux":326,"redux-thunk":320}],350:[function(require,module,exports){
+},{"./reducers":353,"./universal":354,"react":308,"react-dom":117,"react-redux":246,"react-router":277,"redux":326,"redux-thunk":320}],350:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -48617,6 +48630,8 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = require('react-redux');
 
+var _reactRouter = require('react-router');
+
 var _showdown = require('showdown');
 
 var _showdown2 = _interopRequireDefault(_showdown);
@@ -48667,8 +48682,8 @@ var Archive = function (_React$Component) {
           'h1',
           null,
           _react2.default.createElement(
-            'a',
-            { href: '/' },
+            _reactRouter.Link,
+            { to: '/' },
             'Lifegadget'
           )
         ),
@@ -48695,8 +48710,8 @@ var Archive = function (_React$Component) {
     }
   }], [{
     key: 'handleFetch',
-    value: function handleFetch(id, dispatch) {
-      return dispatch((0, _action.updateArticleAsync)(this.fetchData, id));
+    value: function handleFetch(dispatch, renderProps) {
+      return dispatch((0, _action.fetchArticleAsync)(this.fetchData, renderProps.params.id));
     }
   }, {
     key: 'fetchData',
@@ -48727,15 +48742,15 @@ function mapStateToProps(state) {
 }
 function mapDispatchToProps(dispatch) {
   return {
-    handleFetch: function handleFetch(id) {
-      dispatch((0, _action.updateArticleAsync)(id));
+    handleFetch: function handleFetch(callback, id, dispatch) {
+      dispatch((0, _action.fetchArticleAsync)(callback, id));
     }
   };
 }
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Archive);
 
-},{"../action.js":348,"node-fetch":92,"react":308,"react-redux":246,"showdown":328}],352:[function(require,module,exports){
+},{"../action.js":348,"node-fetch":92,"react":308,"react-redux":246,"react-router":277,"showdown":328}],352:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -48750,9 +48765,17 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = require('react-redux');
 
+var _reactRouter = require('react-router');
+
 var _showdown = require('showdown');
 
 var _showdown2 = _interopRequireDefault(_showdown);
+
+var _nodeFetch = require('node-fetch');
+
+var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
+
+var _action = require('../action.js');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -48772,8 +48795,23 @@ var Index = function (_React$Component) {
   }
 
   _createClass(Index, [{
+    key: 'componentWillMount',
+    value: function componentWillMount() {}
+  }, {
     key: 'render',
     value: function render() {
+      console.log(this.props.data[0].title.rendered);
+      var list = this.props.data.map(function (item) {
+        return _react2.default.createElement(
+          'div',
+          { key: item.id },
+          _react2.default.createElement(
+            _reactRouter.Link,
+            { to: '/archive/' + item.id },
+            item.title.rendered
+          )
+        );
+      });
       return _react2.default.createElement(
         'div',
         null,
@@ -48781,13 +48819,36 @@ var Index = function (_React$Component) {
           'h1',
           null,
           _react2.default.createElement(
-            'a',
-            { href: '/' },
+            _reactRouter.Link,
+            { to: '/' },
             'Lifegadget'
           )
         ),
-        _react2.default.createElement('article', null)
+        _react2.default.createElement(
+          'article',
+          null,
+          list
+        )
       );
+    }
+  }], [{
+    key: 'handleFetch',
+    value: function handleFetch(dispatch, renderProps) {
+      return dispatch((0, _action.fetchIndexAsync)(this.fetchData));
+    }
+  }, {
+    key: 'fetchData',
+    value: function fetchData() {
+      return (0, _nodeFetch2.default)('http://localhost:8080/wordpress/wp-json/wp/v2/posts', {
+        method: "get",
+        mode: 'cors'
+      }).then(function (response) {
+        if (response.status === 200) {
+          return response.json();
+        } else {
+          return console.dir(response);
+        }
+      });
     }
   }]);
 
@@ -48797,9 +48858,22 @@ var Index = function (_React$Component) {
 // Connect to Redux
 
 
-exports.default = (0, _reactRedux.connect)()(Index);
+function mapStateToProps(state) {
+  return {
+    data: state.data
+  };
+}
+function mapDispatchToProps(dispatch) {
+  return {
+    handleFetch: function handleFetch(callback, dispatch) {
+      dispatch((0, _action.fetchIndexAsync)(callback));
+    }
+  };
+}
 
-},{"react":308,"react-redux":246,"showdown":328}],353:[function(require,module,exports){
+exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Index);
+
+},{"../action.js":348,"node-fetch":92,"react":308,"react-redux":246,"react-router":277,"showdown":328}],353:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -48810,8 +48884,12 @@ var appReducer = exports.appReducer = function appReducer(state, action) {
   console.log(state);
   console.log(action);
   switch (action.type) {
-    case 'UPDATE':
+    case 'fetch_article':
       console.log('update!!!!');
+      return Object.assign({}, state, {
+        data: action.data
+      });
+    case 'fetch_index':
       return Object.assign({}, state, {
         data: action.data
       });

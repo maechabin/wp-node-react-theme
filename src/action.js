@@ -1,19 +1,34 @@
-const UPDATE = 'UPDATE';
+const FETCH_ARTICLE = 'fetch_article';
+const FETCH_INDEX = 'fetch_index';
 
 // Action createStore
-export function updateArticle(data) {
-  console.log('action!!!!!!!!!!!!!!!!!!');
+export function fetchArticle(data) {
   return {
-    type: UPDATE,
+    type: FETCH_ARTICLE,
     data,
   };
 }
-
-// thunk
-export function updateArticleAsync(callback, id) {
+// redux-thunk
+export function fetchArticleAsync(callback, id) {
   return dispatch => {
     return callback(id).then(
-      (apiResult) => dispatch(updateArticle(apiResult))
+      (apiResult) => dispatch(fetchArticle(apiResult))
+    );
+  }
+}
+
+// Action createStore
+export function fetchIndex(data) {
+  return {
+    type: FETCH_INDEX,
+    data,
+  }
+}
+// redux-thunk
+export function fetchIndexAsync(callback) {
+  return dispatch => {
+    return callback().then(
+      (apiResult) => dispatch(fetchIndex(apiResult))
     );
   }
 }

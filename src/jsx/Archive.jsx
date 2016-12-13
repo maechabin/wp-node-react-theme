@@ -1,18 +1,19 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { Link } from 'react-router';
 import Showdown from 'showdown';
 import fetch from 'node-fetch';
-import { updateArticleAsync } from '../action.js';
+import { fetchArticleAsync } from '../action.js';
 
 class Archive extends React.Component {
-  static handleFetch(id, dispatch) {
-    return dispatch(updateArticleAsync(this.fetchData, id));
+  static handleFetch(dispatch, renderProps) {
+    return dispatch(fetchArticleAsync(this.fetchData, renderProps.params.id));
   }
 
   static fetchData(id) {
     return fetch(`http://localhost:8080/wordpress/wp-json/wp/v2/posts/${id}`, {
       method: "get",
-      mode: 'cors'
+      mode: 'cors',
     }).then(response => {
       if (response.status === 200) {
         return response.json();
@@ -37,7 +38,7 @@ class Archive extends React.Component {
     return (
       <div>
         <h1>
-          <a href="/">Lifegadget</a>
+          <Link to="/">Lifegadget</Link>
         </h1>
         <article>
           <h2>{this.props.data.title.rendered}</h2>
@@ -54,13 +55,13 @@ class Archive extends React.Component {
 // Connect to Redux
 function mapStateToProps(state) {
   return {
-    data: state.data
+    data: state.data,
   };
 }
 function mapDispatchToProps(dispatch) {
   return {
     handleFetch(callback, id, dispatch) {
-      dispatch(updateArticleAsync(callback, id));
+      dispatch(fetchArticleAsync(callback, id));
     },
   }
 }

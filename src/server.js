@@ -8,6 +8,8 @@ import thunk from 'redux-thunk';
 import { Provider } from 'react-redux';
 import { appReducer } from './reducers';
 
+import serialize from 'serialize-javascript';
+
 import { routes, blogStore, createServerApp } from './universal';
 import App from './jsx/App.jsx';
 import Index from './jsx/Index.jsx';
@@ -39,7 +41,7 @@ function handleRender(req, res) {
       );
 
       const promises = renderProps.components.map(
-        c => c.handleFetch ? c.handleFetch(renderProps.params.id, store.dispatch) : Promise.resolve('no fetching')
+        c => c.handleFetch ? c.handleFetch(store.dispatch, renderProps) : Promise.resolve('no fetching')
       );
       Promise.all(promises).then(() => {
         const html = ReactDOMServer.renderToString(
@@ -70,7 +72,7 @@ function renderFullPage(html, finalState) {
           ${html}
         </div>
         <script>
-          window.__PRELOADED_STATE__ = ${finalState}
+          window.__PRELOADED_STATE__ = ${serialize(finalState)}
         </script>
         <script src="/assets/bundle.js"></script>
       </body>
