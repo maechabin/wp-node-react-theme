@@ -10,7 +10,7 @@ import { appReducer } from './reducers';
 
 import serialize from 'serialize-javascript';
 
-import { routes, blogStore, createServerApp } from './universal';
+import { routes } from './routes';
 import App from './jsx/App.jsx';
 import Index from './jsx/Index.jsx';
 import Archive from './jsx/Archive.jsx';
@@ -49,7 +49,7 @@ function handleRender(req, res) {
             <RouterContext { ...renderProps } />
           </Provider>
         );
-        const finalState = JSON.stringify(store.getState());
+        const finalState = store.getState();
         return res.status(200).send(renderFullPage(html, finalState));
       });
     } else {
@@ -65,6 +65,7 @@ function renderFullPage(html, finalState) {
       <head>
         <meta charset="utf-8">
         <title>Lifegadget</title>
+        <base href="/">
       </head>
 
       <body>

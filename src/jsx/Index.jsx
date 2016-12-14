@@ -24,20 +24,23 @@ class Index extends React.Component {
   }
 
   componentWillMount() {
-
+    this.props.handleFetch(Index.fetchData);
   }
 
   render() {
-    console.log(this.props.data[0].title.rendered);
     const list = this.props.data.map(
-      item => <div key={item.id}><Link to={`/archive/${item.id}`}>{item.title.rendered}</Link></div>
+      item => (
+        <div key={item.id}>
+          <Link to={`/archive/${item.id}`}>{item.title.rendered}</Link>
+        </div>
+      )
     );
     return (
       <div>
         <h1>
           <Link to={`/`}>Lifegadget</Link>
         </h1>
-        <article>{list}</article>
+        <main>{list}</main>
       </div>
     );
   };
@@ -51,7 +54,7 @@ function mapStateToProps(state) {
 }
 function mapDispatchToProps(dispatch) {
   return {
-    handleFetch(callback, dispatch) {
+    handleFetch(callback) {
       dispatch(fetchIndexAsync(callback));
     },
   }

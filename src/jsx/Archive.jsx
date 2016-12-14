@@ -30,8 +30,8 @@ class Archive extends React.Component {
   };
 
   componentWillMount() {
-    console.log(this.props.dispatch);
-    //Archive.handleFetch(this.props.params.id, this.props.dispatch);
+    console.log(this.props.data.id);
+    this.props.handleFetch(this.props.data.id, Archive.fetchData);
   }
 
   render() {
@@ -60,8 +60,8 @@ function mapStateToProps(state) {
 }
 function mapDispatchToProps(dispatch) {
   return {
-    handleFetch(callback, id, dispatch) {
-      dispatch(fetchArticleAsync(callback, id));
+    handleFetch(id, callback) {
+      return dispatch(fetchArticleAsync(callback, id));
     },
   }
 }
