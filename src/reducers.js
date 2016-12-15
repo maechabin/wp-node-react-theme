@@ -1,4 +1,4 @@
-export const appReducer = (state, action) => {
+export const appReducer = (state = {}, action) => {
   console.log('reduce!!!!!!!');
   console.log(state);
   console.log(action);

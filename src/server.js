@@ -1,9 +1,10 @@
 import express from 'express';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
-import { match, RouterContext } from 'react-router';
+import { createMemoryHistory, match, RouterContext } from 'react-router';
+import { syncHistoryWithStore, routerReducer, routerMiddleware } from 'react-router-redux';
 
-import { createStore, applyMiddleware } from 'redux';
+import { createStore, compose, combineReducers, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
 import { Provider } from 'react-redux';
 import { appReducer } from './reducers';
@@ -21,25 +22,34 @@ const router = express.Router();
 
 app.use('/assets', express.static('dist'));
 app.use('/assets', express.static('public'));
-app.use(express.static('dist'));
-//app.get('/archive/:id(\\d+)', handleRender);
+// app.use(express.static('dist'));
 app.use(handleRender);
 
 function handleRender(req, res) {
-  match({ routes, location: req.url }, (error, redirectLocation, renderProps) => {
+  const reducers = combineReducers({
+    app: appReducer,
+    routing: routerReducer,
+  });
+  const preloadedState = { data: {} };
+  const initialState = {
+    app: preloadedState,
+  };
+  const memoryHistory = createMemoryHistory(req.url);
+  const store = createStore(
+    reducers,
+    initialState,
+    applyMiddleware(thunk, routerMiddleware(memoryHistory))
+  );
+
+  const history = syncHistoryWithStore(memoryHistory, store);
+
+  match({ history, routes, location: req.url }, (error, redirectLocation, renderProps) => {
     if (error) {
       return res.status(500).send(error.message);
     } else if (redirectLocation) {
       return res.redirect(302, redirectLocation.pathname + redirectLocation.search);
     } else if (renderProps) {
       console.dir(renderProps.components[renderProps.components.length - 1]);
-      const preloadedState = { data: {} };
-      const store = createStore(
-        appReducer,
-        preloadedState,
-        applyMiddleware(thunk)
-      );
-
       const promises = renderProps.components.map(
         c => c.handleFetch ? c.handleFetch(store.dispatch, renderProps) : Promise.resolve('no fetching')
       );
@@ -65,7 +75,6 @@ function renderFullPage(html, finalState) {
       <head>
         <meta charset="utf-8">
         <title>Lifegadget</title>
-        <base href="/">
       </head>
 
       <body>

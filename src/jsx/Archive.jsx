@@ -37,9 +37,6 @@ class Archive extends React.Component {
   render() {
     return (
       <div>
-        <h1>
-          <Link to="/">Lifegadget</Link>
-        </h1>
         <article>
           <h2>{this.props.data.title.rendered}</h2>
           <p>
@@ -55,7 +52,7 @@ class Archive extends React.Component {
 // Connect to Redux
 function mapStateToProps(state) {
   return {
-    data: state.data,
+    data: state.app.data,
   };
 }
 function mapDispatchToProps(dispatch) {

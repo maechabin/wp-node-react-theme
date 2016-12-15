@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { createStore, applyMiddleware, combineReducers } from 'redux';
+import { createStore, combineReducers, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
 import thunk from 'redux-thunk';
 import { Router, browserHistory} from 'react-router';
@@ -10,12 +10,17 @@ import { routes } from './routes';
 import { appReducer } from './reducers';
 
 const preloadedState = window.__PRELOADED_STATE__;
+
+const reducers = combineReducers({
+  app: appReducer,
+  routing: routerReducer,
+});
+const initialState = {
+  app: preloadedState,
+};
 const store = createStore(
-  combineReducers({
-    appReducer,
-    routing: routerReducer,
-  }),
-  preloadedState,
+  reducers,
+  initialState,
   applyMiddleware(thunk, routerMiddleware(browserHistory))
 );
 

@@ -48900,10 +48900,15 @@ var _reducers = require('./reducers');
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var preloadedState = window.__PRELOADED_STATE__;
-var store = (0, _redux.createStore)((0, _redux.combineReducers)({
-  appReducer: _reducers.appReducer,
+
+var reducers = (0, _redux.combineReducers)({
+  app: _reducers.appReducer,
   routing: _reactRouterRedux.routerReducer
-}), preloadedState, (0, _redux.applyMiddleware)(_reduxThunk2.default, (0, _reactRouterRedux.routerMiddleware)(_reactRouter.browserHistory)));
+});
+var initialState = {
+  app: preloadedState
+};
+var store = (0, _redux.createStore)(reducers, initialState, (0, _redux.applyMiddleware)(_reduxThunk2.default, (0, _reactRouterRedux.routerMiddleware)(_reactRouter.browserHistory)));
 
 var history = (0, _reactRouterRedux.syncHistoryWithStore)(_reactRouter.browserHistory, store);
 
@@ -48913,7 +48918,7 @@ _reactDom2.default.render(_react2.default.createElement(
   _react2.default.createElement(_reactRouter.Router, { history: history, routes: _routes.routes })
 ), document.querySelector('.content'));
 
-},{"./reducers":358,"./routes":359,"react":313,"react-dom":117,"react-redux":246,"react-router":282,"react-router-redux":252,"redux":331,"redux-thunk":325}],355:[function(require,module,exports){
+},{"./reducers":361,"./routes":362,"react":313,"react-dom":117,"react-redux":246,"react-router":282,"react-router-redux":252,"redux":331,"redux-thunk":325}],355:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -48925,6 +48930,18 @@ var _createClass = function () { function defineProperties(target, props) { for 
 var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
+
+var _Header = require('./app/Header.jsx');
+
+var _Header2 = _interopRequireDefault(_Header);
+
+var _Footer = require('./app/Footer.jsx');
+
+var _Footer2 = _interopRequireDefault(_Footer);
+
+var _Sidebar = require('./app/Sidebar.jsx');
+
+var _Sidebar2 = _interopRequireDefault(_Sidebar);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -48949,7 +48966,10 @@ var App = function (_React$Component) {
       return _react2.default.createElement(
         'div',
         null,
-        this.props.children
+        _react2.default.createElement(_Header2.default, null),
+        this.props.children,
+        _react2.default.createElement(_Sidebar2.default, null),
+        _react2.default.createElement(_Footer2.default, null)
       );
     }
   }]);
@@ -48963,7 +48983,7 @@ App.propTypes = {
   children: _react2.default.PropTypes.object
 };
 
-},{"react":313}],356:[function(require,module,exports){
+},{"./app/Footer.jsx":358,"./app/Header.jsx":359,"./app/Sidebar.jsx":360,"react":313}],356:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -49027,15 +49047,6 @@ var Archive = function (_React$Component) {
         'div',
         null,
         _react2.default.createElement(
-          'h1',
-          null,
-          _react2.default.createElement(
-            _reactRouter.Link,
-            { to: '/' },
-            'Lifegadget'
-          )
-        ),
-        _react2.default.createElement(
           'article',
           null,
           _react2.default.createElement(
@@ -49085,7 +49096,7 @@ var Archive = function (_React$Component) {
 
 function mapStateToProps(state) {
   return {
-    data: state.data
+    data: state.app.data
   };
 }
 function mapDispatchToProps(dispatch) {
@@ -49145,12 +49156,13 @@ var Index = function (_React$Component) {
   _createClass(Index, [{
     key: 'componentWillMount',
     value: function componentWillMount() {
+      console.dir(this.props);
       this.props.handleFetch(Index.fetchData);
     }
   }, {
     key: 'render',
     value: function render() {
-      var list = this.props.data.map(function (item) {
+      var list = this.props.data ? this.props.data.map(function (item) {
         return _react2.default.createElement(
           'div',
           { key: item.id },
@@ -49160,19 +49172,10 @@ var Index = function (_React$Component) {
             item.title.rendered
           )
         );
-      });
+      }) : '';
       return _react2.default.createElement(
         'div',
         null,
-        _react2.default.createElement(
-          'h1',
-          null,
-          _react2.default.createElement(
-            _reactRouter.Link,
-            { to: '/' },
-            'Lifegadget'
-          )
-        ),
         _react2.default.createElement(
           'main',
           null,
@@ -49209,13 +49212,13 @@ var Index = function (_React$Component) {
 
 function mapStateToProps(state) {
   return {
-    data: state.data
+    data: state.app.data
   };
 }
 function mapDispatchToProps(dispatch) {
   return {
     handleFetch: function handleFetch(callback) {
-      dispatch((0, _action.fetchIndexAsync)(callback));
+      return dispatch((0, _action.fetchIndexAsync)(callback));
     }
   };
 }
@@ -49228,7 +49231,89 @@ exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-var appReducer = exports.appReducer = function appReducer(state, action) {
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var Footer = function Footer(props) {
+  return _react2.default.createElement(
+    'footer',
+    null,
+    'LifeGadget'
+  );
+};
+
+exports.default = Footer;
+
+},{"react":313}],359:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRouter = require('react-router');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var Header = function Header(props) {
+  return _react2.default.createElement(
+    'header',
+    null,
+    _react2.default.createElement(
+      'h1',
+      null,
+      _react2.default.createElement(
+        _reactRouter.Link,
+        { to: '/' },
+        'LifeGadget'
+      )
+    )
+  );
+};
+
+exports.default = Header;
+
+},{"react":313,"react-router":282}],360:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var Sidebar = function Sidebar(props) {
+  return _react2.default.createElement(
+    'div',
+    null,
+    'LifeGadget'
+  );
+};
+
+exports.default = Sidebar;
+
+},{"react":313}],361:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var appReducer = exports.appReducer = function appReducer() {
+  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var action = arguments[1];
+
   console.log('reduce!!!!!!!');
   console.log(state);
   console.log(action);
@@ -49247,7 +49332,7 @@ var appReducer = exports.appReducer = function appReducer(state, action) {
   }
 };
 
-},{}],359:[function(require,module,exports){
+},{}],362:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -49296,4 +49381,4 @@ var routes = exports.routes = _react2.default.createElement(
   )
 );
 
-},{"./jsx/App.jsx":355,"./jsx/Archive.jsx":356,"./jsx/Index.jsx":357,"./reducers":358,"react":313,"react-redux":246,"react-router":282,"redux":331,"redux-thunk":325}]},{},[354]);
+},{"./jsx/App.jsx":355,"./jsx/Archive.jsx":356,"./jsx/Index.jsx":357,"./reducers":361,"react":313,"react-redux":246,"react-router":282,"redux":331,"redux-thunk":325}]},{},[354]);
