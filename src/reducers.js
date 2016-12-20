@@ -6,12 +6,16 @@ export const appReducer = (state = {}, action) => {
     case 'fetch_article':
       console.log('update!!!!');
       return Object.assign({}, state, {
-        data: action.data,
+        article: action.data,
       });
+    case 'clear_article':
+      return Object.assign({}, state, {
+        article: {},
+      })
     case 'fetch_index':
       return Object.assign({}, state, {
-        data: action.data,
-      })
+        index: action.data,
+      });
     default:
       return state;
   }

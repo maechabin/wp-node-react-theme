@@ -7,13 +7,13 @@ import { fetchIndexAsync } from '../action.js';
 import config from '../../config.js';
 import _ from 'lodash';
 
-class Index extends React.Component {
+class Search extends React.Component {
   static handleFetch(dispatch, renderProps) {
     return dispatch(fetchIndexAsync(this.fetchData));
   }
 
-  static fetchData() {
-    return fetch(`${config.blogUrl}/wp-json/wp/v2/posts`, {
+  static fetchData(word) {
+    return fetch(`${config.blogUrl}/wp-json/wp/v2/posts?search=${word}`, {
       method: 'get',
       mode: 'cors',
     }).then(response => {
@@ -27,7 +27,7 @@ class Index extends React.Component {
 
   componentWillMount() {
     console.log(this.props);
-    return this.props.handleFetch(Index.fetchData);
+    return this.props.handleFetch(Search.fetchData);
   }
 
   render() {
@@ -49,8 +49,6 @@ class Index extends React.Component {
 
 // Connect to Redux
 function mapStateToProps(state) {
-  console.log('state: ');
-  console.dir(state.app.index);
   return {
     index: state.app.index,
   };
@@ -66,4 +64,4 @@ function mapDispatchToProps(dispatch) {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(Index);
+)(Search);

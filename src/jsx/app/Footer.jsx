@@ -1,9 +1,10 @@
 import React from 'react';
+import config from '../../../config.js';
 
 const Footer = props => {
   return (
     <footer>
-      LifeGadget
+      &copy; 2017 <addoress>{config.blogTitle}</addoress>
     </footer>
   );
 }

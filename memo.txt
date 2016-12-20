@@ -26,3 +26,17 @@ https://medium.com/@firasd/quick-start-tutorial-universal-react-with-server-side
 
 
 export https_proxy=https://t_maeda:fancMaeda56@proxy.gate.fancs.com:8080
+
+
+
+
+Warning: render(): Target node has markup rendered by React, but there are unrelated nodes as well.
+This is most commonly caused by white-space inserted around server-rendered markup.
+
+=> server.js
+
+<div class="content">
+  ${html}
+</div>
+を以下に修正
+<div class="content">${html}</div>

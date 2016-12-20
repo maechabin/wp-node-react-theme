@@ -4,10 +4,11 @@ import ReactDOMServer from 'react-dom/server';
 import { createMemoryHistory, match, RouterContext } from 'react-router';
 import { syncHistoryWithStore, routerReducer, routerMiddleware } from 'react-router-redux';
 
-import { createStore, compose, combineReducers, applyMiddleware } from 'redux';
+import { combineReducers, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
 import { Provider } from 'react-redux';
 import { appReducer } from './reducers';
+import { configureStore } from './store';
 
 import serialize from 'serialize-javascript';
 
@@ -18,7 +19,7 @@ import Archive from './jsx/Archive.jsx';
 
 const app = express();
 const port = 3000;
-const router = express.Router();
+// const router = express.Router();
 
 app.use('/assets', express.static('dist'));
 app.use('/assets', express.static('public'));
@@ -34,12 +35,13 @@ function handleRender(req, res) {
   const initialState = {
     app: preloadedState,
   };
+
   const memoryHistory = createMemoryHistory(req.url);
-  const store = createStore(
-    reducers,
-    initialState,
-    applyMiddleware(thunk, routerMiddleware(memoryHistory))
-  );
+  const middleware = (thunk, memoryHistory) => {
+    return applyMiddleware(thunk, routerMiddleware(memoryHistory));
+  }
+
+  const store = configureStore(reducers, initialState, middleware(thunk, memoryHistory));
 
   const history = syncHistoryWithStore(memoryHistory, store);
 
@@ -78,9 +80,7 @@ function renderFullPage(html, finalState) {
       </head>
 
       <body>
-        <div class="content">
-          ${html}
-        </div>
+        <div class="content">${html}</div>
         <script>
           window.__PRELOADED_STATE__ = ${serialize(finalState)}
         </script>

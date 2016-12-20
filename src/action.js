@@ -1,4 +1,5 @@
 const FETCH_ARTICLE = 'fetch_article';
+const CLEAR_ARTICLE = 'clear_article';
 const FETCH_INDEX = 'fetch_index';
 
 // Action createStore
@@ -14,6 +15,13 @@ export function fetchArticleAsync(callback, id) {
     return callback(id).then(
       (apiResult) => dispatch(fetchArticle(apiResult))
     );
+  }
+}
+
+// Action createMemoryHistory
+export function clearArticle() {
+  return {
+    type: CLEAR_ARTICLE,
   }
 }
 
