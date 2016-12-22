@@ -6,4 +6,4 @@ export const configureStore = (reducers, initialState, middleware) => {
     initialState,
     middleware,
   );
-}
+};

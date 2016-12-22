@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import Showdown from 'showdown';
 import fetch from 'node-fetch';
-import { fetchArticleAsync, clearArticle } from '../action.js';
+import { fetchArticleAsync } from '../action.js';
 import config from '../../config.js';
 import _ from 'lodash';
 
@@ -16,11 +16,11 @@ class Archive extends React.Component {
     return fetch(`${config.blogUrl}/wp-json/wp/v2/posts/${id}`, {
       method: 'get',
       mode: 'cors',
-    }).then(response => {
-      if (response.status === 200) {
-        return response.json();
+    }).then(res => {
+      if (res.status === 200) {
+        return res.json();
       } else {
-        return console.dir(response);
+        return console.dir(res);
       }
     });
   }
@@ -30,25 +30,19 @@ class Archive extends React.Component {
     const rawMarkup = converter.makeHtml(this.props.article[contentType].rendered.toString());
     return { __html: rawMarkup };
   }
-
+/*
   componentWillMount() {
     if (typeof this.props.article && this.props.params.id !== this.props.article.id) {
-      return [
-        this.props.handleClearArticle(),
-      //this.props.handleFetch(this.props.params.id, Archive.fetchData)
-      ];
+      return this.props.handleClearArticle(),
     }
   }
-
-  componentDidMount() {
+*/
+  componentWillMount() {
     console.log(`id: ${this.props.params.id}`);
     //this.props.handleFetch(this.props.params.id, Archive.fetchData);
-    if (_.isEmpty(this.props.article) || this.props.params.id !== this.props.article.id) {
-      return [
-        //this.props.handleChangeArticleId(this.props.params.id),
-        this.props.handleFetch(this.props.params.id, Archive.fetchData)
-      ];
-    }
+    // if (_.isEmpty(this.props.article) || this.props.params.id !== this.props.article.id) {
+    return this.props.handleFetch(this.props.params.id, Archive.fetchData);
+    // }
   }
 
   render() {

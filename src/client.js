@@ -8,24 +8,35 @@ import { syncHistoryWithStore, routerReducer, routerMiddleware } from 'react-rou
 
 import { routes } from './routes';
 import { configureStore } from './store';
-import { appReducer } from './reducers';
+import { appReducer } from './reducers/appReducer';
+import { rootReducer } from './reducers/rootReducer';
 
+// 1. Reducers
 const reducers = combineReducers({
+  root: rootReducer,
   app: appReducer,
   routing: routerReducer,
 });
 
+// 2. States
+const rootState = {
+  searchValue: '',
+};
 const preloadedState = window.__PRELOADED_STATE__.app;
 const initialState = {
+  root: rootState,
   app: preloadedState,
 };
 
+// 3. Middleware
 const middleware = (thunk, browserHistory) => {
-  return applyMiddleware(thunk, routerMiddleware(browserHistory))
-}
+  return applyMiddleware(thunk, routerMiddleware(browserHistory));
+};
 
+// Make Store
 const store = configureStore(reducers, initialState, middleware(thunk, browserHistory));
 
+// History
 const history = syncHistoryWithStore(browserHistory, store);
 
 ReactDOM.render(

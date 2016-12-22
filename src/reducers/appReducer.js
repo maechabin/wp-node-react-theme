@@ -1,20 +1,22 @@
+import { FETCH_ARTICLE, CLEAR_ARTICLE, FETCH_INDEX } from '../../constants';
+
 export const appReducer = (state = {}, action) => {
   console.log('reduce!!!!!!!');
   console.log(state);
   console.log(action);
   switch (action.type) {
-    case 'fetch_article':
+    case FETCH_ARTICLE:
       console.log('update!!!!');
       return Object.assign({}, state, {
-        article: action.data,
+        article: action.payload,
       });
-    case 'clear_article':
+    case CLEAR_ARTICLE:
       return Object.assign({}, state, {
         article: {},
       })
-    case 'fetch_index':
+    case FETCH_INDEX:
       return Object.assign({}, state, {
-        index: action.data,
+        index: action.payload,
       });
     default:
       return state;

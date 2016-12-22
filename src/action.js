@@ -1,19 +1,17 @@
-const FETCH_ARTICLE = 'fetch_article';
-const CLEAR_ARTICLE = 'clear_article';
-const FETCH_INDEX = 'fetch_index';
+import { FETCH_ARTICLE, CLEAR_ARTICLE, FETCH_INDEX, CHANGE_VALUE } from '../constants';
 
-// Action createStore
-export function fetchArticle(data) {
+// Action creator
+export function fetchArticle(payload) {
   return {
     type: FETCH_ARTICLE,
-    data,
+    payload,
   };
 }
 // redux-thunk
 export function fetchArticleAsync(callback, id) {
   return dispatch => {
     return callback(id).then(
-      (apiResult) => dispatch(fetchArticle(apiResult))
+      (res) => dispatch(fetchArticle(res))
     );
   }
 }
@@ -25,18 +23,37 @@ export function clearArticle() {
   }
 }
 
-// Action createStore
-export function fetchIndex(data) {
+// Action creator
+export function fetchIndex(payload) {
   return {
     type: FETCH_INDEX,
-    data,
+    payload,
   }
 }
 // redux-thunk
 export function fetchIndexAsync(callback) {
   return dispatch => {
     return callback().then(
-      (apiResult) => dispatch(fetchIndex(apiResult))
+      (res) => dispatch(fetchIndex(res))
     );
+  }
+}
+
+
+// 検索
+// fetchIndexでディスパッチ
+// redux-thunk
+export function searchArticleAsync(callback, keyword) {
+  return dispatch => {
+    return callback(keyword).then(
+      (res) => dispatch(fetchIndex(res))
+    );
+  }
+}
+
+export function changeValue(payload) {
+  return {
+    type: CHANGE_VALUE,
+    payload,
   }
 }

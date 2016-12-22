@@ -7,15 +7,13 @@ import { syncHistoryWithStore, routerReducer, routerMiddleware } from 'react-rou
 import { combineReducers, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
 import { Provider } from 'react-redux';
-import { appReducer } from './reducers';
+import { appReducer } from './reducers/appReducer';
+import { rootReducer } from './reducers/rootReducer';
 import { configureStore } from './store';
 
 import serialize from 'serialize-javascript';
-
+import config from '../config'
 import { routes } from './routes';
-import App from './jsx/App.jsx';
-import Index from './jsx/Index.jsx';
-import Archive from './jsx/Archive.jsx';
 
 const app = express();
 const port = 3000;
@@ -23,26 +21,39 @@ const port = 3000;
 
 app.use('/assets', express.static('dist'));
 app.use('/assets', express.static('public'));
-// app.use(express.static('dist'));
 app.use(handleRender);
 
 function handleRender(req, res) {
+
+  // 1. Reducers
   const reducers = combineReducers({
+    root: rootReducer,
     app: appReducer,
     routing: routerReducer,
   });
-  const preloadedState = { data: {} };
+
+  // 2. States
+  const rootState = {
+    searchValue: '',
+  };
+  const preloadedState = {
+    data: {},
+  };
   const initialState = {
+    root: rootState,
     app: preloadedState,
   };
 
+  // 3. Middleware
   const memoryHistory = createMemoryHistory(req.url);
   const middleware = (thunk, memoryHistory) => {
     return applyMiddleware(thunk, routerMiddleware(memoryHistory));
   }
 
+  // Make Store
   const store = configureStore(reducers, initialState, middleware(thunk, memoryHistory));
 
+  // History
   const history = syncHistoryWithStore(memoryHistory, store);
 
   match({ history, routes, location: req.url }, (error, redirectLocation, renderProps) => {
@@ -76,7 +87,7 @@ function renderFullPage(html, finalState) {
     <html>
       <head>
         <meta charset="utf-8">
-        <title>Lifegadget</title>
+        <title>${config.blogTitleTag}</title>
       </head>
 
       <body>
