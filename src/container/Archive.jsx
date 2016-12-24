@@ -29,8 +29,6 @@ class Archive extends React.Component {
   }
 
   render() {
-    console.log('render');
-    console.log(this.props.params.id);
     return (
       <Article {...this.props} />
     );

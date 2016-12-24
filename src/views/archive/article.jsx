@@ -2,16 +2,13 @@ import React from 'react';
 import Showdown from 'showdown';
 
 const Article = (props) => {
-  console.log('article');
-  console.log(props.article.id);
-  console.log(props.params.id);
-  const rawMarkup = (contentType) => {
+  function rawMarkup(contentType) {
     const converter = new Showdown.Converter();
     const markup = converter.makeHtml(props.article[contentType].rendered.toString());
     return { __html: markup };
-  };
+  }
 
-  const article = (props.article.id != props.params.id) ? '' : (
+  const article = (props.article.id !== Number(props.params.id)) ? '' : (
     <div>
       <h2>{props.article.title.rendered}</h2>
       <p>
@@ -24,6 +21,10 @@ const Article = (props) => {
   return (
     <article className="article">{article}</article>
   );
+};
+Article.propTypes = {
+  article: React.PropTypes.object,
+  params: React.PropTypes.object,
 };
 
 export default Article;

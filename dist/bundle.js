@@ -66199,8 +66199,6 @@ var Archive = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
-      console.log('render');
-      console.log(this.props.params.id);
       return _react2.default.createElement(_article2.default, this.props);
     }
   }], [{
@@ -66911,16 +66909,13 @@ var _showdown2 = _interopRequireDefault(_showdown);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var Article = function Article(props) {
-  console.log('article');
-  console.log(props.article.id);
-  console.log(props.params.id);
-  var rawMarkup = function rawMarkup(contentType) {
+  function rawMarkup(contentType) {
     var converter = new _showdown2.default.Converter();
     var markup = converter.makeHtml(props.article[contentType].rendered.toString());
     return { __html: markup };
-  };
+  }
 
-  var article = props.article.id != props.params.id ? '' : _react2.default.createElement(
+  var article = props.article.id !== Number(props.params.id) ? '' : _react2.default.createElement(
     'div',
     null,
     _react2.default.createElement(
@@ -66945,6 +66940,10 @@ var Article = function Article(props) {
     { className: 'article' },
     article
   );
+};
+Article.propTypes = {
+  article: _react2.default.PropTypes.object,
+  params: _react2.default.PropTypes.object
 };
 
 exports.default = Article;
