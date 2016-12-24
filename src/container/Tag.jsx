@@ -1,12 +1,12 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import Showdown from 'showdown';
 import fetch from 'node-fetch';
-import { searchArticleAsync } from '../action.js';
-import config from '../../config.js';
+import { searchArticleAsync } from '../action';
+import config from '../../config';
 import _ from 'lodash';
 
-import List from '../jsx/index/list.jsx';
+// view files
+import List from '../views/index/list.jsx';
 
 class Tag extends React.Component {
   static handleFetch(dispatch, renderProps) {
@@ -54,5 +54,5 @@ function mapDispatchToProps(dispatch) {
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(Tag);

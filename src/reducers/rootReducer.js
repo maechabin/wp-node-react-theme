@@ -1,8 +1,12 @@
-import { CHANGE_VALUE } from '../../constants';
+import { CHANGE_VALUE, SET_SEARCH_VALUE } from '../action';
 
 export const rootReducer = (state = {}, action) => {
   switch (action.type) {
     case CHANGE_VALUE:
+      return Object.assign({}, state, {
+        inputValue: action.payload,
+      });
+    case SET_SEARCH_VALUE:
       return Object.assign({}, state, {
         searchValue: action.payload,
       });

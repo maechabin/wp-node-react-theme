@@ -6,14 +6,14 @@ import { syncHistoryWithStore, routerReducer, routerMiddleware } from 'react-rou
 
 import { combineReducers, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
+import serialize from 'serialize-javascript';
 import { Provider } from 'react-redux';
 import { appReducer } from './reducers/appReducer';
 import { rootReducer } from './reducers/rootReducer';
 import { configureStore } from './store';
 
-import serialize from 'serialize-javascript';
-import config from '../config'
-import { routes } from './routes';
+import config from '../config';
+import { routes } from './routes.jsx';
 
 const app = express();
 const port = 3000;
@@ -24,7 +24,6 @@ app.use('/assets', express.static('public'));
 app.use(handleRender);
 
 function handleRender(req, res) {
-
   // 1. Reducers
   const reducers = combineReducers({
     root: rootReducer,
@@ -34,6 +33,7 @@ function handleRender(req, res) {
 
   // 2. States
   const rootState = {
+    inputValue: '',
     searchValue: '',
   };
   const preloadedState = {
@@ -46,12 +46,13 @@ function handleRender(req, res) {
 
   // 3. Middleware
   const memoryHistory = createMemoryHistory(req.url);
-  const middleware = (thunk, memoryHistory) => {
-    return applyMiddleware(thunk, routerMiddleware(memoryHistory));
-  }
+  const middleware = () => applyMiddleware(
+    thunk,
+    routerMiddleware(memoryHistory),
+  );
 
   // Make Store
-  const store = configureStore(reducers, initialState, middleware(thunk, memoryHistory));
+  const store = configureStore(reducers, initialState, middleware());
 
   // History
   const history = syncHistoryWithStore(memoryHistory, store);
@@ -64,12 +65,13 @@ function handleRender(req, res) {
     } else if (renderProps) {
       console.dir(renderProps.components[renderProps.components.length - 1]);
       const promises = renderProps.components.map(
-        c => c.handleFetch ? c.handleFetch(store.dispatch, renderProps) : Promise.resolve('no fetching')
+        c => (c.handleFetch ? c.handleFetch(store.dispatch, renderProps) : Promise.resolve('no fetching')),
       );
+
       Promise.all(promises).then(() => {
         const html = ReactDOMServer.renderToString(
           <Provider store={store}>
-            <RouterContext { ...renderProps } />
+            <RouterContext {...renderProps} />
           </Provider>
         );
         const finalState = store.getState();
@@ -78,7 +80,6 @@ function handleRender(req, res) {
     } else {
       return res.status(404).send('Not found');
     }
-
   });
 }
 function renderFullPage(html, finalState) {

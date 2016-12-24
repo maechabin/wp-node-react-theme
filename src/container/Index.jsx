@@ -1,15 +1,15 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import Showdown from 'showdown';
 import fetch from 'node-fetch';
-import { fetchIndexAsync } from '../action.js';
-import config from '../../config.js';
+import { fetchIndexAsync } from '../action';
+import config from '../../config';
 import _ from 'lodash';
 
-import List from '../jsx/index/list.jsx';
+// view files
+import List from '../views/index/list.jsx';
 
 class Index extends React.Component {
-  static handleFetch(dispatch, renderProps) {
+  static handleFetch(dispatch) {
     return dispatch(fetchIndexAsync(this.fetchData));
   }
 
@@ -17,17 +17,16 @@ class Index extends React.Component {
     return fetch(`${config.blogUrl}/wp-json/wp/v2/posts`, {
       method: 'get',
       mode: 'cors',
-    }).then(res => {
+    }).then((res) => {
       if (res.status === 200) {
         return res.json();
-      } else {
-        return console.dir(res);
       }
+      return console.dir(res);
     });
   }
 
   componentWillMount() {
-    console.log(this.props);
+    console.log('index');
     return this.props.handleFetch(Index.fetchData);
   }
 
@@ -35,13 +34,11 @@ class Index extends React.Component {
     return (
       <List {...this.props} />
     );
-  };
+  }
 }
 
 // Connect to Redux
 function mapStateToProps(state) {
-  console.log('state: ');
-  console.dir(state.app.index);
   return {
     index: state.app.index,
   };
@@ -51,10 +48,10 @@ function mapDispatchToProps(dispatch) {
     handleFetch(callback) {
       return dispatch(fetchIndexAsync(callback));
     },
-  }
+  };
 }
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(Index);

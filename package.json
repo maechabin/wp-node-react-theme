@@ -6,8 +6,8 @@
   "scripts": {
     "lint": "eslint ./src/server.js",
     "start": "babel-node ./src/server.js",
-    "watch": "watchify -t babelify ./src/client.js -o ./dist/bundle.js",
-    "build": "browserify -t babelify ./src/client.js -o ./dist/bundle.js"
+    "watch": "watchify -t babelify ./src/client.jsx -o ./dist/bundle.js",
+    "build": "browserify -t babelify ./src/client.jsx -o ./dist/bundle.js"
   },
   "author": "Lifegadget",
   "license": "MIT",

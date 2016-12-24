@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router';
-import config from '../../../config.js';
+import config from '../../../config';
 import SearchForm from './SearchForm.jsx';
 
 const Header = props => (

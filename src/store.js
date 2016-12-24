@@ -1,4 +1,4 @@
-import { createStore, applyMiddleware } from 'redux';
+import { createStore } from 'redux';
 
 export const configureStore = (reducers, initialState, middleware) => {
   return createStore(

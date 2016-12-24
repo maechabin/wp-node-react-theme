@@ -1,12 +1,12 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import Showdown from 'showdown';
 import fetch from 'node-fetch';
-import { searchArticleAsync } from '../action.js';
-import config from '../../config.js';
+import { searchArticleAsync } from '../action';
+import config from '../../config';
 import _ from 'lodash';
 
-import List from '../jsx/index/list.jsx';
+// view files
+import List from '../views/index/list.jsx';
 
 class Search extends React.Component {
   static handleFetch(dispatch, renderProps) {
@@ -17,26 +17,39 @@ class Search extends React.Component {
     return fetch(`${config.blogUrl}/wp-json/wp/v2/posts?filter[s]=${keyword}`, {
       method: 'get',
       mode: 'cors',
-    }).then(res => {
+    }).then((res) => {
       if (res.status === 200) {
         return res.json();
-      } else {
-        return console.dir(res);
       }
+      return console.dir(res);
     });
   }
 
   componentWillMount() {
-    console.log(this.props);
     return this.props.handleFetch(this.props.params.keyword, Search.fetchData);
+  }
+
+  componentWillUpdate(nextProps) {
+    if (nextProps.keyword !== '' && nextProps.keyword !== this.props.params.keyword) {
+      return this.props.handleFetch(nextProps.keyword, Search.fetchData);
+    }
+    return false;
   }
 
   render() {
     return (
-      <List {...this.props} />
+      <div>
+        {this.props.keyword}
+        <List {...this.props} />
+      </div>
     );
   }
 }
+Search.propTypes = {
+  params: React.PropTypes.object,
+  keyword: React.PropTypes.string,
+  handleFetch: React.PropTypes.func,
+};
 
 // Connect to Redux
 function mapStateToProps(state) {
@@ -50,10 +63,10 @@ function mapDispatchToProps(dispatch) {
     handleFetch(keyword, callback) {
       return dispatch(searchArticleAsync(callback, keyword));
     },
-  }
+  };
 }
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(Search);

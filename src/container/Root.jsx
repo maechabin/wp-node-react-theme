@@ -1,13 +1,14 @@
 import React from 'react';
 import { connect } from 'react-redux';
 
-import { changeValue } from '../action.js';
-import Header from '../jsx/root/Header.jsx';
-import Footer from '../jsx/root/Footer.jsx';
-import Sidebar from '../jsx/root/Sidebar.jsx';
+import { changeValue, setSearchValue } from '../action';
+
+// view files
+import Header from '../views/root/Header.jsx';
+import Footer from '../views/root/Footer.jsx';
+import Sidebar from '../views/root/Sidebar.jsx';
 
 class Root extends React.Component {
-
   render() {
     return (
       <div>
@@ -21,13 +22,12 @@ class Root extends React.Component {
 }
 Root.propTypes = {
   children: React.PropTypes.object,
-}
+};
 
 // Connect to Redux
 function mapStateToProps(state) {
-  console.log(state);
   return {
-    searchValue: state.root.searchValue,
+    inputValue: state.root.inputValue,
   };
 }
 function mapDispatchToProps(dispatch) {
@@ -35,10 +35,13 @@ function mapDispatchToProps(dispatch) {
     handleChange(keyword) {
       dispatch(changeValue(keyword));
     },
-  }
+    handleSend(keyword) {
+      dispatch(setSearchValue(keyword));
+    },
+  };
 }
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(Root);

@@ -1,12 +1,12 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import Showdown from 'showdown';
 import fetch from 'node-fetch';
-import { searchArticleAsync } from '../action.js';
-import config from '../../config.js';
+import { searchArticleAsync } from '../action';
+import config from '../../config';
 import _ from 'lodash';
 
-import List from '../jsx/index/list.jsx';
+// view files
+import List from '../views/index/list.jsx';
 
 class Category extends React.Component {
   static handleFetch(dispatch, renderProps) {
@@ -17,17 +17,15 @@ class Category extends React.Component {
     return fetch(`${config.blogUrl}/wp-json/wp/v2/posts?filter[s]=${category}`, {
       method: 'get',
       mode: 'cors',
-    }).then(res => {
+    }).then((res) => {
       if (res.status === 200) {
         return res.json();
-      } else {
-        return console.dir(res);
       }
+      return console.dir(res);
     });
   }
 
   componentWillMount() {
-    console.log(this.props);
     return this.props.handleFetch(this.props.params.category, Category.fetchData);
   }
 
@@ -54,5 +52,5 @@ function mapDispatchToProps(dispatch) {
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
 )(Category);

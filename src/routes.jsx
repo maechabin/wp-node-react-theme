@@ -12,6 +12,7 @@ export const routes = (
   <Route path="/" component={Root}>
     <IndexRoute component={Index} />
     <Route path="/archive/:id" component={Archive} />
+    <Route path="/search/" component={Search} />
     <Route path="/search/:keyword" component={Search} />
     <Route path="/category/:category" component={Category} />
     <Route path="/tag/:tag" component={Tag} />
