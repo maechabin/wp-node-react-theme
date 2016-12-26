@@ -11,6 +11,7 @@ import { Provider } from 'react-redux';
 import { appReducer } from './reducers/appReducer';
 import { rootReducer } from './reducers/rootReducer';
 import { configureStore } from './store';
+import { fetchCategoryAsync, fetchTagAsync } from './action'
 
 import config from '../config';
 import { routes } from './routes.jsx';
@@ -37,7 +38,10 @@ function handleRender(req, res) {
     searchValue: '',
   };
   const preloadedState = {
-    data: {},
+    category: {},
+    tag: {},
+    index: [],
+    article: {},
   };
   const initialState = {
     root: rootState,
@@ -63,18 +67,28 @@ function handleRender(req, res) {
     } else if (redirectLocation) {
       return res.redirect(302, redirectLocation.pathname + redirectLocation.search);
     } else if (renderProps) {
-      console.dir(renderProps.components[renderProps.components.length - 1]);
-      const promises = renderProps.components.map(
+      // console.dir(renderProps.components[renderProps.components.length - 1]);
+
+      // Promise
+      const promise1 = renderProps.components.map(
         c => (c.handleFetch ? c.handleFetch(store.dispatch, renderProps) : Promise.resolve('no fetching')),
       );
+      const promise2 = fetchCategoryAsync();
+      const promise3 = fetchTagAsync();
 
-      Promise.all(promises).then(() => {
+      Promise.all([
+        promise1,
+        promise2(store.dispatch),
+        promise3(store.dispatch),
+      ]).then(() => {
+        console.log('Promise!!');
         const html = ReactDOMServer.renderToString(
           <Provider store={store}>
             <RouterContext {...renderProps} />
           </Provider>
         );
         const finalState = store.getState();
+        console.dir(finalState);
         return res.status(200).send(renderFullPage(html, finalState));
       });
     } else {

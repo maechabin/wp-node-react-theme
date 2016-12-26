@@ -49,6 +49,9 @@ http://localhost:8080/wordpress/wp-json/wp/v2/posts/?filter[category]=informatio
 タグ検索
 http://localhost:8080/wordpress/wp-json/wp/v2/posts/?filter[tag]=wordpress
 
+記事一覧
+http://localhost:8080/wordpress/wp-json/wp/v2/posts
+
 カテゴリ一覧
 http://localhost:8080/wordpress/wp-json/wp/v2/categories
 
