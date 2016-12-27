@@ -1,20 +1,20 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import fetch from 'node-fetch';
-import { searchArticleAsync } from '../action';
+import { fetchIndexAsync } from '../actions/action';
 import config from '../../config';
 import _ from 'lodash';
 
 // view files
-import List from '../views/index/list.jsx';
+import List from '../views/index/List.jsx';
 
-class Category extends React.Component {
-  static handleFetch(dispatch, renderProps) {
-    return dispatch(searchArticleAsync(this.fetchData, renderProps.params.category));
+class Index extends React.Component {
+  static handleFetch(dispatch) {
+    return dispatch(fetchIndexAsync(this.fetchData));
   }
 
-  static fetchData(category) {
-    return fetch(`${config.blogUrl}/wp-json/wp/v2/posts?filter[s]=${category}`, {
+  static fetchData() {
+    return fetch(`${config.blogUrl}/wp-json/wp/v2/posts`, {
       method: 'get',
       mode: 'cors',
     }).then((res) => {
@@ -26,7 +26,8 @@ class Category extends React.Component {
   }
 
   componentWillMount() {
-    return this.props.handleFetch(this.props.params.category, Category.fetchData);
+    console.log('index');
+    return this.props.handleFetch(Index.fetchData);
   }
 
   render() {
@@ -44,8 +45,8 @@ function mapStateToProps(state) {
 }
 function mapDispatchToProps(dispatch) {
   return {
-    handleFetch(category, callback) {
-      return dispatch(searchArticleAsync(callback, category));
+    handleFetch(callback) {
+      return dispatch(fetchIndexAsync(callback));
     },
   };
 }
@@ -53,4 +54,4 @@ function mapDispatchToProps(dispatch) {
 export default connect(
   mapStateToProps,
   mapDispatchToProps,
-)(Category);
+)(Index);

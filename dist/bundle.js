@@ -65925,7 +65925,7 @@ exports.searchArticleAsync = searchArticleAsync;
 exports.changeValue = changeValue;
 exports.setSearchValue = setSearchValue;
 
-var _config = require('../config');
+var _config = require('../../config');
 
 var _config2 = _interopRequireDefault(_config);
 
@@ -66042,7 +66042,54 @@ function setSearchValue(payload) {
   };
 }
 
-},{"../config":1,"node-fetch":94}],356:[function(require,module,exports){
+},{"../../config":1,"node-fetch":94}],356:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.GET_TAG_NAME = undefined;
+exports.getTagName = getTagName;
+exports.getTagNameAsync = getTagNameAsync;
+
+var _config = require('../../config');
+
+var _config2 = _interopRequireDefault(_config);
+
+var _nodeFetch = require('node-fetch');
+
+var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// Article系
+// TagIDからTag名取得
+
+var GET_TAG_NAME = exports.GET_TAG_NAME = 'GET_TAG_NAME';
+function getTagName(payload) {
+  return {
+    type: GET_TAG_NAME,
+    payload: payload
+  };
+}
+
+function getTagNameAsync(array) {
+  return function (dispatch) {
+    return (0, _nodeFetch2.default)(_config2.default.blogUrl + '/wp-json/wp/v2/tags/' + id, {
+      method: 'get',
+      mode: 'cors'
+    }).then(function (res) {
+      if (res.status === 200) {
+        return res.json();
+      }
+      return console.dir(res);
+    }).then(function (res) {
+      return dispatch(getTagName(res));
+    });
+  };
+}
+
+},{"../../config":1,"node-fetch":94}],357:[function(require,module,exports){
 'use strict';
 
 var _react = require('react');
@@ -66073,12 +66120,15 @@ var _appReducer = require('./reducers/appReducer');
 
 var _rootReducer = require('./reducers/rootReducer');
 
+var _archiveReducer = require('./reducers/archiveReducer');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // 1. Reducers
 var reducers = (0, _redux.combineReducers)({
   root: _rootReducer.rootReducer,
   app: _appReducer.appReducer,
+  archive: _archiveReducer.archiveReducer,
   routing: _reactRouterRedux.routerReducer
 });
 
@@ -66088,9 +66138,13 @@ var rootState = {
   searchValue: ''
 };
 var preloadedState = window.__PRELOADED_STATE__.app;
+var archiveState = {
+  tag: []
+};
 var initialState = {
   root: rootState,
-  app: preloadedState
+  app: preloadedState,
+  archive: archiveState
 };
 
 // 3. Middleware
@@ -66114,7 +66168,7 @@ _reactDom2.default.render(_react2.default.createElement(
   )
 ), document.querySelector('.content'));
 
-},{"./reducers/appReducer":363,"./reducers/rootReducer":364,"./routes.jsx":365,"./store":366,"react":315,"react-dom":119,"react-redux":248,"react-router":284,"react-router-redux":254,"redux":333,"redux-thunk":327}],357:[function(require,module,exports){
+},{"./reducers/appReducer":364,"./reducers/archiveReducer":365,"./reducers/rootReducer":366,"./routes.jsx":367,"./store":368,"react":315,"react-dom":119,"react-redux":248,"react-router":284,"react-router-redux":254,"redux":333,"redux-thunk":327}],358:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66133,15 +66187,17 @@ var _nodeFetch = require('node-fetch');
 
 var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
 
-var _action = require('../action');
+var _action = require('../actions/action');
+
+var _archiveAction = require('../actions/archiveAction');
 
 var _config = require('../../config');
 
 var _config2 = _interopRequireDefault(_config);
 
-var _article = require('../views/archive/article.jsx');
+var _Article = require('../views/archive/Article.jsx');
 
-var _article2 = _interopRequireDefault(_article);
+var _Article2 = _interopRequireDefault(_Article);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -66169,9 +66225,15 @@ var Archive = function (_React$Component) {
       return this.props.handleFetch(this.props.params.id, Archive.fetchData);
     }
   }, {
+    key: 'componentWillUpdate',
+    value: function componentWillUpdate(nextProps) {
+      return this.props.handleGet(nextProps.article.tags);
+    }
+  }, {
     key: 'render',
     value: function render() {
-      return _react2.default.createElement(_article2.default, this.props);
+      console.dir(this.props);
+      return _react2.default.createElement(_Article2.default, this.props);
     }
   }], [{
     key: 'handleFetch',
@@ -66203,20 +66265,26 @@ Archive.propTypes = {
 // Connect to Redux
 function mapStateToProps(state) {
   return {
-    article: state.app.article
+    category: state.app.category,
+    tag: state.app.tag,
+    article: state.app.article,
+    tags: state.archive.tag
   };
 }
 function mapDispatchToProps(dispatch) {
   return {
     handleFetch: function handleFetch(id, callback) {
       return dispatch((0, _action.fetchArticleAsync)(callback, id));
+    },
+    handleGet: function handleGet(array) {
+      return dispatch((0, _archiveAction.getTagNameAsync)(array));
     }
   };
 }
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Archive);
 
-},{"../../config":1,"../action":355,"../views/archive/article.jsx":367,"node-fetch":94,"react":315,"react-redux":248}],358:[function(require,module,exports){
+},{"../../config":1,"../actions/action":355,"../actions/archiveAction":356,"../views/archive/Article.jsx":369,"node-fetch":94,"react":315,"react-redux":248}],359:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66235,7 +66303,7 @@ var _nodeFetch = require('node-fetch');
 
 var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
 
-var _action = require('../action');
+var _action = require('../actions/action');
 
 var _config = require('../../config');
 
@@ -66245,9 +66313,9 @@ var _lodash = require('lodash');
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _list = require('../views/index/list.jsx');
+var _List = require('../views/index/List.jsx');
 
-var _list2 = _interopRequireDefault(_list);
+var _List2 = _interopRequireDefault(_List);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -66277,7 +66345,7 @@ var Category = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
-      return _react2.default.createElement(_list2.default, this.props);
+      return _react2.default.createElement(_List2.default, this.props);
     }
   }], [{
     key: 'handleFetch',
@@ -66287,7 +66355,7 @@ var Category = function (_React$Component) {
   }, {
     key: 'fetchData',
     value: function fetchData(category) {
-      return (0, _nodeFetch2.default)(_config2.default.blogUrl + '/wp-json/wp/v2/posts?filter[s]=' + category, {
+      return (0, _nodeFetch2.default)(_config2.default.blogUrl + '/wp-json/wp/v2/posts?filter[category_name]=' + category, {
         method: 'get',
         mode: 'cors'
       }).then(function (res) {
@@ -66320,7 +66388,7 @@ function mapDispatchToProps(dispatch) {
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Category);
 
-},{"../../config":1,"../action":355,"../views/index/list.jsx":368,"lodash":93,"node-fetch":94,"react":315,"react-redux":248}],359:[function(require,module,exports){
+},{"../../config":1,"../actions/action":355,"../views/index/List.jsx":373,"lodash":93,"node-fetch":94,"react":315,"react-redux":248}],360:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66339,7 +66407,7 @@ var _nodeFetch = require('node-fetch');
 
 var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
 
-var _action = require('../action');
+var _action = require('../actions/action');
 
 var _config = require('../../config');
 
@@ -66349,9 +66417,9 @@ var _lodash = require('lodash');
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _list = require('../views/index/list.jsx');
+var _List = require('../views/index/List.jsx');
 
-var _list2 = _interopRequireDefault(_list);
+var _List2 = _interopRequireDefault(_List);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -66382,7 +66450,7 @@ var Index = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
-      return _react2.default.createElement(_list2.default, this.props);
+      return _react2.default.createElement(_List2.default, this.props);
     }
   }], [{
     key: 'handleFetch',
@@ -66425,7 +66493,7 @@ function mapDispatchToProps(dispatch) {
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Index);
 
-},{"../../config":1,"../action":355,"../views/index/list.jsx":368,"lodash":93,"node-fetch":94,"react":315,"react-redux":248}],360:[function(require,module,exports){
+},{"../../config":1,"../actions/action":355,"../views/index/List.jsx":373,"lodash":93,"node-fetch":94,"react":315,"react-redux":248}],361:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66440,7 +66508,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = require('react-redux');
 
-var _action = require('../action');
+var _action = require('../actions/action');
 
 var _Header = require('../views/root/Header.jsx');
 
@@ -66514,7 +66582,7 @@ function mapDispatchToProps(dispatch) {
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Root);
 
-},{"../action":355,"../views/root/Footer.jsx":369,"../views/root/Header.jsx":370,"../views/root/Sidebar.jsx":372,"react":315,"react-redux":248}],361:[function(require,module,exports){
+},{"../actions/action":355,"../views/root/Footer.jsx":374,"../views/root/Header.jsx":375,"../views/root/Sidebar.jsx":377,"react":315,"react-redux":248}],362:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66533,7 +66601,7 @@ var _nodeFetch = require('node-fetch');
 
 var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
 
-var _action = require('../action');
+var _action = require('../actions/action');
 
 var _config = require('../../config');
 
@@ -66543,9 +66611,9 @@ var _lodash = require('lodash');
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _list = require('../views/index/list.jsx');
+var _List = require('../views/index/List.jsx');
 
-var _list2 = _interopRequireDefault(_list);
+var _List2 = _interopRequireDefault(_List);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -66587,7 +66655,7 @@ var Search = function (_React$Component) {
         'div',
         null,
         this.props.keyword,
-        _react2.default.createElement(_list2.default, this.props)
+        _react2.default.createElement(_List2.default, this.props)
       );
     }
   }], [{
@@ -66636,7 +66704,7 @@ function mapDispatchToProps(dispatch) {
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Search);
 
-},{"../../config":1,"../action":355,"../views/index/list.jsx":368,"lodash":93,"node-fetch":94,"react":315,"react-redux":248}],362:[function(require,module,exports){
+},{"../../config":1,"../actions/action":355,"../views/index/List.jsx":373,"lodash":93,"node-fetch":94,"react":315,"react-redux":248}],363:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66655,7 +66723,7 @@ var _nodeFetch = require('node-fetch');
 
 var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
 
-var _action = require('../action');
+var _action = require('../actions/action');
 
 var _config = require('../../config');
 
@@ -66665,9 +66733,9 @@ var _lodash = require('lodash');
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _list = require('../views/index/list.jsx');
+var _List = require('../views/index/List.jsx');
 
-var _list2 = _interopRequireDefault(_list);
+var _List2 = _interopRequireDefault(_List);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -66698,7 +66766,7 @@ var Tag = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
-      return _react2.default.createElement(_list2.default, this.props);
+      return _react2.default.createElement(_List2.default, this.props);
     }
   }], [{
     key: 'handleFetch',
@@ -66742,7 +66810,7 @@ function mapDispatchToProps(dispatch) {
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Tag);
 
-},{"../../config":1,"../action":355,"../views/index/list.jsx":368,"lodash":93,"node-fetch":94,"react":315,"react-redux":248}],363:[function(require,module,exports){
+},{"../../config":1,"../actions/action":355,"../views/index/List.jsx":373,"lodash":93,"node-fetch":94,"react":315,"react-redux":248}],364:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66750,7 +66818,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.appReducer = undefined;
 
-var _action = require('../action');
+var _action = require('../actions/action');
 
 var appReducer = exports.appReducer = function appReducer() {
   var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -66758,14 +66826,10 @@ var appReducer = exports.appReducer = function appReducer() {
 
   switch (action.type) {
     case _action.FETCH_ARTICLE:
-      console.log(_action.FETCH_ARTICLE);
-      console.log(action.payload);
       return Object.assign({}, state, {
         article: action.payload
       });
     case _action.FETCH_INDEX:
-      console.log(_action.FETCH_INDEX);
-      console.log(action.payload);
       return Object.assign({}, state, {
         index: action.payload
       });
@@ -66782,7 +66846,31 @@ var appReducer = exports.appReducer = function appReducer() {
   }
 };
 
-},{"../action":355}],364:[function(require,module,exports){
+},{"../actions/action":355}],365:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.archiveReducer = undefined;
+
+var _archiveAction = require('../actions/archiveAction');
+
+var archiveReducer = exports.archiveReducer = function archiveReducer() {
+  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var action = arguments[1];
+
+  switch (action.type) {
+    case _archiveAction.GET_TAG_NAME:
+      return Object.assign({}, state, {
+        tag: action.payload
+      });
+    default:
+      return state;
+  }
+};
+
+},{"../actions/archiveAction":356}],366:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66790,7 +66878,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.rootReducer = undefined;
 
-var _action = require('../action');
+var _action = require('../actions/action');
 
 var rootReducer = exports.rootReducer = function rootReducer() {
   var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -66810,7 +66898,7 @@ var rootReducer = exports.rootReducer = function rootReducer() {
   }
 };
 
-},{"../action":355}],365:[function(require,module,exports){
+},{"../actions/action":355}],367:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66824,27 +66912,27 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRouter = require('react-router');
 
-var _Root = require('./container/Root.jsx');
+var _Root = require('./containers/Root.jsx');
 
 var _Root2 = _interopRequireDefault(_Root);
 
-var _Index = require('./container/Index.jsx');
+var _Index = require('./containers/Index.jsx');
 
 var _Index2 = _interopRequireDefault(_Index);
 
-var _Archive = require('./container/Archive.jsx');
+var _Archive = require('./containers/Archive.jsx');
 
 var _Archive2 = _interopRequireDefault(_Archive);
 
-var _Search = require('./container/Search.jsx');
+var _Search = require('./containers/Search.jsx');
 
 var _Search2 = _interopRequireDefault(_Search);
 
-var _Category = require('./container/Category.jsx');
+var _Category = require('./containers/Category.jsx');
 
 var _Category2 = _interopRequireDefault(_Category);
 
-var _Tag = require('./container/Tag.jsx');
+var _Tag = require('./containers/Tag.jsx');
 
 var _Tag2 = _interopRequireDefault(_Tag);
 
@@ -66861,7 +66949,7 @@ var routes = exports.routes = _react2.default.createElement(
   _react2.default.createElement(_reactRouter.Route, { path: '/tag/:tag', component: _Tag2.default })
 );
 
-},{"./container/Archive.jsx":357,"./container/Category.jsx":358,"./container/Index.jsx":359,"./container/Root.jsx":360,"./container/Search.jsx":361,"./container/Tag.jsx":362,"react":315,"react-router":284}],366:[function(require,module,exports){
+},{"./containers/Archive.jsx":358,"./containers/Category.jsx":359,"./containers/Index.jsx":360,"./containers/Root.jsx":361,"./containers/Search.jsx":362,"./containers/Tag.jsx":363,"react":315,"react-router":284}],368:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66875,7 +66963,7 @@ var configureStore = exports.configureStore = function configureStore(reducers, 
   return (0, _redux.createStore)(reducers, initialState, middleware);
 };
 
-},{"redux":333}],367:[function(require,module,exports){
+},{"redux":333}],369:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66886,9 +66974,23 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
+var _reactRouter = require('react-router');
+
 var _showdown = require('showdown');
 
 var _showdown2 = _interopRequireDefault(_showdown);
+
+var _ArticleBreadcrumb = require('./ArticleBreadcrumb.jsx');
+
+var _ArticleBreadcrumb2 = _interopRequireDefault(_ArticleBreadcrumb);
+
+var _ArticleCategory = require('./ArticleCategory.jsx');
+
+var _ArticleCategory2 = _interopRequireDefault(_ArticleCategory);
+
+var _ArticleTag = require('./ArticleTag.jsx');
+
+var _ArticleTag2 = _interopRequireDefault(_ArticleTag);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -66902,6 +67004,7 @@ var Article = function Article(props) {
   var article = props.article.id !== Number(props.params.id) ? '' : _react2.default.createElement(
     'div',
     null,
+    _react2.default.createElement(_ArticleBreadcrumb2.default, props),
     _react2.default.createElement(
       'h2',
       null,
@@ -66916,7 +67019,10 @@ var Article = function Article(props) {
         props.article.date
       )
     ),
-    _react2.default.createElement('div', { dangerouslySetInnerHTML: rawMarkup('content') })
+    _react2.default.createElement(_ArticleCategory2.default, props),
+    _react2.default.createElement(_ArticleTag2.default, props),
+    _react2.default.createElement('div', { dangerouslySetInnerHTML: rawMarkup('content') }),
+    _react2.default.createElement(_ArticleCategory2.default, props)
   );
 
   return _react2.default.createElement(
@@ -66932,7 +67038,110 @@ Article.propTypes = {
 
 exports.default = Article;
 
-},{"react":315,"showdown":335}],368:[function(require,module,exports){
+},{"./ArticleBreadcrumb.jsx":370,"./ArticleCategory.jsx":371,"./ArticleTag.jsx":372,"react":315,"react-router":284,"showdown":335}],370:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRouter = require('react-router');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var ArticleBreadcrumb = function ArticleBreadcrumb(props) {
+  return _react2.default.createElement(
+    'ul',
+    null,
+    _react2.default.createElement(
+      'li',
+      null,
+      _react2.default.createElement(
+        _reactRouter.Link,
+        { to: '/' },
+        '\u30DB\u30FC\u30E0'
+      )
+    )
+  );
+};
+
+exports.default = ArticleBreadcrumb;
+
+},{"react":315,"react-router":284}],371:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRouter = require('react-router');
+
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var ArticleCategory = function ArticleCategory(props) {
+  //const category = props.category[props.article.categories[0] - 1].name;
+  var category = _lodash2.default.isEmpty(props.article.categories) ? '' : props.article.categories.map(function (id) {
+    return _react2.default.createElement(
+      'span',
+      { key: id },
+      _react2.default.createElement(
+        _reactRouter.Link,
+        { to: '/category/' + props.category[id - 1].slug },
+        props.category[id - 1].name
+      )
+    );
+  });
+  return _react2.default.createElement(
+    'div',
+    null,
+    category
+  );
+};
+
+exports.default = ArticleCategory;
+
+},{"lodash":93,"react":315,"react-router":284}],372:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRouter = require('react-router');
+
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var ArticleTag = function ArticleTag(props) {
+  return _react2.default.createElement(
+    'span',
+    null,
+    props.tags
+  );
+};
+
+exports.default = ArticleTag;
+
+},{"lodash":93,"react":315,"react-router":284}],373:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66954,7 +67163,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var List = function List(props) {
   var list = _lodash2.default.isEmpty(props.index) ? '' : props.index.map(function (item) {
     return _react2.default.createElement(
-      'div',
+      'li',
       { key: item.id },
       _react2.default.createElement(
         _reactRouter.Link,
@@ -66969,10 +67178,10 @@ var List = function List(props) {
     );
   });
   return _react2.default.createElement(
-    'div',
-    null,
+    'main',
+    { className: 'index' },
     _react2.default.createElement(
-      'main',
+      'ul',
       null,
       list
     )
@@ -66981,7 +67190,7 @@ var List = function List(props) {
 
 exports.default = List;
 
-},{"lodash":93,"react":315,"react-router":284}],369:[function(require,module,exports){
+},{"lodash":93,"react":315,"react-router":284}],374:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67013,7 +67222,7 @@ var Footer = function Footer(props) {
 
 exports.default = Footer;
 
-},{"../../../config":1,"react":315}],370:[function(require,module,exports){
+},{"../../../config":1,"react":315}],375:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67055,7 +67264,7 @@ var Header = function Header(props) {
 
 exports.default = Header;
 
-},{"../../../config":1,"./SearchForm.jsx":371,"react":315,"react-router":284}],371:[function(require,module,exports){
+},{"../../../config":1,"./SearchForm.jsx":376,"react":315,"react-router":284}],376:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -67094,7 +67303,7 @@ var SearchForm = function SearchForm(props) {
 
 exports.default = SearchForm;
 
-},{"react":315}],372:[function(require,module,exports){
+},{"react":315}],377:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -67117,4 +67326,4 @@ var Sidebar = function Sidebar(props) {
 
 exports.default = Sidebar;
 
-},{"react":315}]},{},[356]);
+},{"react":315}]},{},[357]);

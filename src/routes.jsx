@@ -1,12 +1,12 @@
 import React from 'react';
 import { Route, IndexRoute } from 'react-router';
 
-import Root from './container/Root.jsx';
-import Index from './container/Index.jsx';
-import Archive from './container/Archive.jsx';
-import Search from './container/Search.jsx';
-import Category from './container/Category.jsx';
-import Tag from './container/Tag.jsx';
+import Root from './containers/Root.jsx';
+import Index from './containers/Index.jsx';
+import Archive from './containers/Archive.jsx';
+import Search from './containers/Search.jsx';
+import Category from './containers/Category.jsx';
+import Tag from './containers/Tag.jsx';
 
 export const routes = (
   <Route path="/" component={Root}>

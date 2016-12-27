@@ -1,4 +1,4 @@
-import config from '../config';
+import config from '../../config';
 import fetch from 'node-fetch';
 
 export const FETCH_CATEGORY = 'FETCH_CATEGORY';

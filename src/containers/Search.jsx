@@ -1,12 +1,12 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import fetch from 'node-fetch';
-import { searchArticleAsync } from '../action';
+import { searchArticleAsync } from '../actions/action';
 import config from '../../config';
 import _ from 'lodash';
 
 // view files
-import List from '../views/index/list.jsx';
+import List from '../views/index/List.jsx';
 
 class Search extends React.Component {
   static handleFetch(dispatch, renderProps) {

@@ -10,8 +10,9 @@ import serialize from 'serialize-javascript';
 import { Provider } from 'react-redux';
 import { appReducer } from './reducers/appReducer';
 import { rootReducer } from './reducers/rootReducer';
+import { archiveReducer } from './reducers/archiveReducer';
 import { configureStore } from './store';
-import { fetchCategoryAsync, fetchTagAsync } from './action'
+import { fetchCategoryAsync, fetchTagAsync } from './actions/action'
 
 import config from '../config';
 import { routes } from './routes.jsx';
@@ -29,6 +30,7 @@ function handleRender(req, res) {
   const reducers = combineReducers({
     root: rootReducer,
     app: appReducer,
+    archive: archiveReducer,
     routing: routerReducer,
   });
 
@@ -43,9 +45,13 @@ function handleRender(req, res) {
     index: [],
     article: {},
   };
+  const archiveState = {
+    tag: [],
+  }
   const initialState = {
     root: rootState,
     app: preloadedState,
+    archive: archiveState,
   };
 
   // 3. Middleware
@@ -77,18 +83,16 @@ function handleRender(req, res) {
       const promise3 = fetchTagAsync();
 
       Promise.all([
-        promise1,
+        Promise.all(promise1),
         promise2(store.dispatch),
         promise3(store.dispatch),
       ]).then(() => {
-        console.log('Promise!!');
         const html = ReactDOMServer.renderToString(
           <Provider store={store}>
             <RouterContext {...renderProps} />
           </Provider>
         );
         const finalState = store.getState();
-        console.dir(finalState);
         return res.status(200).send(renderFullPage(html, finalState));
       });
     } else {

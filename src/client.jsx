@@ -10,11 +10,13 @@ import { routes } from './routes.jsx';
 import { configureStore } from './store';
 import { appReducer } from './reducers/appReducer';
 import { rootReducer } from './reducers/rootReducer';
+import { archiveReducer } from './reducers/archiveReducer';
 
 // 1. Reducers
 const reducers = combineReducers({
   root: rootReducer,
   app: appReducer,
+  archive: archiveReducer,
   routing: routerReducer,
 });
 
@@ -24,9 +26,13 @@ const rootState = {
   searchValue: '',
 };
 const preloadedState = window.__PRELOADED_STATE__.app;
+const archiveState = {
+  tag: [],
+}
 const initialState = {
   root: rootState,
   app: preloadedState,
+  archive: archiveState,
 };
 
 // 3. Middleware
