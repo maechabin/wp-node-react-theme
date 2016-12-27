@@ -14,16 +14,19 @@ export function getTagName(payload) {
 
 export function getTagNameAsync(array) {
   return dispatch => {
-    return fetch(`${config.blogUrl}/wp-json/wp/v2/tags/${id}`, {
-      method: 'get',
-      mode: 'cors',
-    }).then((res) => {
-      if (res.status === 200) {
-        return res.json();
-      }
-      return console.dir(res);
-    }).then(
-      res => dispatch(getTagName(res)),
+    const tags = array.map(
+      id => fetch(`${config.blogUrl}/wp-json/wp/v2/tags/${id}`, {
+        method: 'get',
+        mode: 'cors',
+      }).then((res) => {
+        if (res.status === 200) {
+          return res.json();
+        }
+        return console.dir(res);
+      }).then(
+        res => res,
+      ),
     );
+    return dispatch(getTagName(tags));
   };
 }

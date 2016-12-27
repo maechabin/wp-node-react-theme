@@ -47,7 +47,7 @@ function handleRender(req, res) {
   };
   const archiveState = {
     tag: [],
-  }
+  };
   const initialState = {
     root: rootState,
     app: preloadedState,
@@ -90,7 +90,7 @@ function handleRender(req, res) {
         const html = ReactDOMServer.renderToString(
           <Provider store={store}>
             <RouterContext {...renderProps} />
-          </Provider>
+          </Provider>,
         );
         const finalState = store.getState();
         return res.status(200).send(renderFullPage(html, finalState));

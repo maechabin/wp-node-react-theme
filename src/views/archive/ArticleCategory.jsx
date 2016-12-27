@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import _ from 'lodash';
 
 const ArticleCategory = props => {
-  //const category = props.category[props.article.categories[0] - 1].name;
+  // const category = props.category[props.article.categories[0] - 1].name;
   const category = _.isEmpty(props.article.categories) ? '' : props.article.categories.map(id => {
     return (
       <span key={id}>

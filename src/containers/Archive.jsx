@@ -30,7 +30,8 @@ class Archive extends React.Component {
   }
 
   componentWillUpdate(nextProps) {
-    return this.props.handleGet(nextProps.article.tags);
+    console.log(nextProps)
+    // return this.props.handleGet(nextProps.article.tags);
   }
 
   render() {
@@ -42,6 +43,8 @@ class Archive extends React.Component {
 }
 Archive.propTypes = {
   params: React.PropTypes.object,
+  handleFetch: React.PropTypes.func,
+  handleGet: React.PropTypes.func,
 };
 
 // Connect to Redux

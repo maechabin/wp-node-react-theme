@@ -28,7 +28,7 @@ const rootState = {
 const preloadedState = window.__PRELOADED_STATE__.app;
 const archiveState = {
   tag: [],
-}
+};
 const initialState = {
   root: rootState,
   app: preloadedState,

@@ -7,6 +7,6 @@ const ArticleBreadcrumb = props => {
       <li><Link to="/">ホーム</Link></li>
     </ul>
   );
-}
+};
 
 export default ArticleBreadcrumb;
