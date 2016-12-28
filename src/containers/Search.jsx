@@ -54,7 +54,7 @@ Search.propTypes = {
 // Connect to Redux
 function mapStateToProps(state) {
   return {
-    index: state.app.index,
+    index: state.index.index,
     keyword: state.root.searchValue,
   };
 }

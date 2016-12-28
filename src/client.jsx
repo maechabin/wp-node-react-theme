@@ -8,30 +8,25 @@ import { syncHistoryWithStore, routerReducer, routerMiddleware } from 'react-rou
 
 import { routes } from './routes.jsx';
 import { configureStore } from './store';
-import { appReducer } from './reducers/appReducer';
+import { indexReducer } from './reducers/indexReducer';
 import { rootReducer } from './reducers/rootReducer';
 import { archiveReducer } from './reducers/archiveReducer';
 
 // 1. Reducers
 const reducers = combineReducers({
   root: rootReducer,
-  app: appReducer,
+  index: indexReducer,
   archive: archiveReducer,
   routing: routerReducer,
 });
 
 // 2. States
-const rootState = {
-  inputValue: '',
-  searchValue: '',
-};
-const preloadedState = window.__PRELOADED_STATE__.app;
-const archiveState = {
-  tag: [],
-};
+const rootState = window.__PRELOADED_STATE__.root;
+const indexState = window.__PRELOADED_STATE__.index;
+const archiveState = window.__PRELOADED_STATE__.archive;
 const initialState = {
   root: rootState,
-  app: preloadedState,
+  index: indexState,
   archive: archiveState,
 };
 

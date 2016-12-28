@@ -1,9 +1,25 @@
 import config from '../../config';
 import fetch from 'node-fetch';
 
-// Article系
-// TagIDからTag名取得
+// Action creator
+export const FETCH_ARTICLE = 'FETCH_ARTICLE';
+export function fetchArticle(payload) {
+  return {
+    type: FETCH_ARTICLE,
+    payload,
+  };
+}
+// redux-thunk
+export function fetchArticleAsync(callback, id) {
+  return dispatch => {
+    return callback(id).then(
+      res => dispatch(fetchArticle(res)),
+    );
+  };
+}
 
+
+// TagIDからTag名取得
 export const GET_TAG_NAME = 'GET_TAG_NAME';
 export function getTagName(payload) {
   return {

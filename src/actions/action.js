@@ -48,23 +48,6 @@ export function fetchTagAsync() {
 }
 
 // Action creator
-export const FETCH_ARTICLE = 'FETCH_ARTICLE';
-export function fetchArticle(payload) {
-  return {
-    type: FETCH_ARTICLE,
-    payload,
-  };
-}
-// redux-thunk
-export function fetchArticleAsync(callback, id) {
-  return dispatch => {
-    return callback(id).then(
-      res => dispatch(fetchArticle(res)),
-    );
-  };
-}
-
-// Action creator
 export const FETCH_INDEX = 'FETCH_INDEX';
 export function fetchIndex(payload) {
   return {

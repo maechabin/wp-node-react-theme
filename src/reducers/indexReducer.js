@@ -1,11 +1,7 @@
-import { FETCH_ARTICLE, FETCH_INDEX, FETCH_CATEGORY, FETCH_TAG } from '../actions/action';
+import { FETCH_INDEX, FETCH_CATEGORY, FETCH_TAG } from '../actions/action';
 
-export const appReducer = (state = {}, action) => {
+export const indexReducer = (state = {}, action) => {
   switch (action.type) {
-    case FETCH_ARTICLE:
-      return Object.assign({}, state, {
-        article: action.payload,
-      });
     case FETCH_INDEX:
       return Object.assign({}, state, {
         index: action.payload,

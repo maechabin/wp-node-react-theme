@@ -40,7 +40,7 @@ class Index extends React.Component {
 // Connect to Redux
 function mapStateToProps(state) {
   return {
-    index: state.app.index,
+    index: state.index.index,
   };
 }
 function mapDispatchToProps(dispatch) {

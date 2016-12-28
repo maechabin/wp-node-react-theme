@@ -1,8 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import fetch from 'node-fetch';
-import { fetchArticleAsync } from '../actions/action';
-import { getTagNameAsync } from '../actions/archiveAction';
+import { fetchArticleAsync, getTagNameAsync } from '../actions/archiveAction';
 import config from '../../config';
 
 // view files
@@ -30,8 +29,10 @@ class Archive extends React.Component {
   }
 
   componentWillUpdate(nextProps) {
-    console.log(nextProps)
-    // return this.props.handleGet(nextProps.article.tags);
+    console.log(this.props.article.tags);
+    if (this.props.gettedTag === false) {
+      return this.props.handleGet(this.props.article.tags);
+    }
   }
 
   render() {
@@ -49,11 +50,13 @@ Archive.propTypes = {
 
 // Connect to Redux
 function mapStateToProps(state) {
+  console.log(state);
   return {
-    category: state.app.category,
-    tag: state.app.tag,
-    article: state.app.article,
+    category: state.index.category,
+    tag: state.index.tag,
+    article: state.archive.article,
     tags: state.archive.tag,
+    gettedTag: state.archive.gettedTag,
   };
 }
 function mapDispatchToProps(dispatch) {

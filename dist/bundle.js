@@ -7,7 +7,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = {
   "blogTitle": "LifeGadget",
   "blogTitleTag": "LifeGadget（ライフガジェット）",
-  "blogUrl": "http://localhost:8888"
+  "blogUrl": "http://localhost:8080/wordpress"
 };
 
 },{}],2:[function(require,module,exports){
@@ -4666,18 +4666,12 @@ module.exports = hyphenateStyleName;
  * will remain to ensure logic does not differ in production.
  */
 
-var validateFormat = function validateFormat(format) {};
-
-if (process.env.NODE_ENV !== 'production') {
-  validateFormat = function validateFormat(format) {
+function invariant(condition, format, a, b, c, d, e, f) {
+  if (process.env.NODE_ENV !== 'production') {
     if (format === undefined) {
       throw new Error('invariant requires an error message argument');
     }
-  };
-}
-
-function invariant(condition, format, a, b, c, d, e, f) {
-  validateFormat(format);
+  }
 
   if (!condition) {
     var error;
@@ -7151,6 +7145,7 @@ module.exports = {
     //
     // Overall, it seems that it's a mess :( http://www8.plala.or.jp/tkubota1/unicode-symbols-map2.html
 
+
     'shiftjis': {
         type: '_dbcs',
         table: function() { return require('./tables/shiftjis.json') },
@@ -7161,10 +7156,8 @@ module.exports = {
     'mskanji': 'shiftjis',
     'sjis': 'shiftjis',
     'windows31j': 'shiftjis',
-    'ms31j': 'shiftjis',
     'xsjis': 'shiftjis',
     'windows932': 'shiftjis',
-    'ms932': 'shiftjis',
     '932': 'shiftjis',
     'cp932': 'shiftjis',
 
@@ -7178,10 +7171,8 @@ module.exports = {
     // TODO: IBM CCSID 942 = CP932, but F0-F9 custom chars and other char changes.
     // TODO: IBM CCSID 943 = Shift_JIS = CP932 with original Shift_JIS lower 128 chars.
 
-
     // == Chinese/GBK ==========================================================
     // http://en.wikipedia.org/wiki/GBK
-    // We mostly implement W3C recommendation: https://www.w3.org/TR/encoding/#gbk-encoder
 
     // Oldest GB2312 (1981, ~7600 chars) is a subset of CP936
     'gb2312': 'cp936',
@@ -7190,10 +7181,11 @@ module.exports = {
     'csgb2312': 'cp936',
     'csiso58gb231280': 'cp936',
     'euccn': 'cp936',
+    'isoir58': 'gbk',
 
     // Microsoft's CP936 is a subset and approximation of GBK.
+    // TODO: Euro = 0x80 in cp936, but not in GBK (where it's valid but undefined)
     'windows936': 'cp936',
-    'ms936': 'cp936',
     '936': 'cp936',
     'cp936': {
         type: '_dbcs',
@@ -7206,28 +7198,24 @@ module.exports = {
         table: function() { return require('./tables/cp936.json').concat(require('./tables/gbk-added.json')) },
     },
     'xgbk': 'gbk',
-    'isoir58': 'gbk',
 
     // GB18030 is an algorithmic extension of GBK.
-    // Main source: https://www.w3.org/TR/encoding/#gbk-encoder
-    // http://icu-project.org/docs/papers/gb18030.html
-    // http://source.icu-project.org/repos/icu/data/trunk/charset/data/xml/gb-18030-2000.xml
-    // http://www.khngai.com/chinese/charmap/tblgbk.php?page=0
     'gb18030': {
         type: '_dbcs',
         table: function() { return require('./tables/cp936.json').concat(require('./tables/gbk-added.json')) },
         gb18030: function() { return require('./tables/gb18030-ranges.json') },
-        encodeSkipVals: [0x80],
-        encodeAdd: {'€': 0xA2E3},
     },
 
     'chinese': 'gb18030',
 
+    // TODO: Support GB18030 (~27000 chars + whole unicode mapping, cp54936)
+    // http://icu-project.org/docs/papers/gb18030.html
+    // http://source.icu-project.org/repos/icu/data/trunk/charset/data/xml/gb-18030-2000.xml
+    // http://www.khngai.com/chinese/charmap/tblgbk.php?page=0
 
     // == Korean ===============================================================
     // EUC-KR, KS_C_5601 and KS X 1001 are exactly the same.
     'windows949': 'cp949',
-    'ms949': 'cp949',
     '949': 'cp949',
     'cp949': {
         type: '_dbcs',
@@ -7268,7 +7256,6 @@ module.exports = {
     // Unicode mapping (http://www.unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/OTHER/BIG5.TXT) is said to be wrong.
 
     'windows950': 'cp950',
-    'ms950': 'cp950',
     '950': 'cp950',
     'cp950': {
         type: '_dbcs',
@@ -7286,6 +7273,7 @@ module.exports = {
     'cnbig5': 'big5hkscs',
     'csbig5': 'big5hkscs',
     'xxbig5': 'big5hkscs',
+
 };
 
 },{"./tables/big5-added.json":63,"./tables/cp936.json":64,"./tables/cp949.json":65,"./tables/cp950.json":66,"./tables/eucjp.json":67,"./tables/gb18030-ranges.json":68,"./tables/gbk-added.json":69,"./tables/shiftjis.json":70}],58:[function(require,module,exports){
@@ -9419,8 +9407,6 @@ module.exports=[
 },{}],71:[function(require,module,exports){
 (function (Buffer){
 "use strict"
-
-// Note: UTF16-LE (or UCS2) codec is Node.js native. See encodings/internal.js
 
 // == UTF16-BE codec. ==========================================================
 
@@ -37827,28 +37813,6 @@ var getDictionaryKey = function (inst) {
   return '.' + inst._rootNodeID;
 };
 
-function isInteractive(tag) {
-  return tag === 'button' || tag === 'input' || tag === 'select' || tag === 'textarea';
-}
-
-function shouldPreventMouseEvent(name, type, props) {
-  switch (name) {
-    case 'onClick':
-    case 'onClickCapture':
-    case 'onDoubleClick':
-    case 'onDoubleClickCapture':
-    case 'onMouseDown':
-    case 'onMouseDownCapture':
-    case 'onMouseMove':
-    case 'onMouseMoveCapture':
-    case 'onMouseUp':
-    case 'onMouseUpCapture':
-      return !!(props.disabled && isInteractive(type));
-    default:
-      return false;
-  }
-}
-
 /**
  * This is a unified interface for event plugins to be installed and configured.
  *
@@ -37917,12 +37881,7 @@ var EventPluginHub = {
    * @return {?function} The stored callback.
    */
   getListener: function (inst, registrationName) {
-    // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
-    // live here; needs to be moved to a better place soon
     var bankForRegistrationName = listenerBank[registrationName];
-    if (shouldPreventMouseEvent(registrationName, inst._currentElement.type, inst._currentElement.props)) {
-      return null;
-    }
     var key = getDictionaryKey(inst);
     return bankForRegistrationName && bankForRegistrationName[key];
   },
@@ -47377,7 +47336,7 @@ module.exports = ReactUpdates;
 
 'use strict';
 
-module.exports = '15.4.1';
+module.exports = '15.4.0';
 },{}],198:[function(require,module,exports){
 /**
  * Copyright 2013-present, Facebook, Inc.
@@ -47955,6 +47914,18 @@ function isInteractive(tag) {
   return tag === 'button' || tag === 'input' || tag === 'select' || tag === 'textarea';
 }
 
+function shouldPreventMouseEvent(inst) {
+  if (inst) {
+    var disabled = inst._currentElement && inst._currentElement.props.disabled;
+
+    if (disabled) {
+      return isInteractive(inst._tag);
+    }
+  }
+
+  return false;
+}
+
 var SimpleEventPlugin = {
 
   eventTypes: eventTypes,
@@ -48025,7 +47996,10 @@ var SimpleEventPlugin = {
       case 'topMouseDown':
       case 'topMouseMove':
       case 'topMouseUp':
-      // TODO: Disabled elements should not respond to mouse events
+        // Disabled elements should not respond to mouse events
+        if (shouldPreventMouseEvent(targetInst)) {
+          return null;
+        }
       /* falls through */
       case 'topMouseOut':
       case 'topMouseOver':
@@ -56410,38 +56384,30 @@ typeof Set === 'function' && isNative(Set) &&
 // Set.prototype.keys
 Set.prototype != null && typeof Set.prototype.keys === 'function' && isNative(Set.prototype.keys);
 
-var setItem;
-var getItem;
-var removeItem;
-var getItemIDs;
-var addRoot;
-var removeRoot;
-var getRootIDs;
-
 if (canUseCollections) {
   var itemMap = new Map();
   var rootIDSet = new Set();
 
-  setItem = function (id, item) {
+  var setItem = function (id, item) {
     itemMap.set(id, item);
   };
-  getItem = function (id) {
+  var getItem = function (id) {
     return itemMap.get(id);
   };
-  removeItem = function (id) {
+  var removeItem = function (id) {
     itemMap['delete'](id);
   };
-  getItemIDs = function () {
+  var getItemIDs = function () {
     return Array.from(itemMap.keys());
   };
 
-  addRoot = function (id) {
+  var addRoot = function (id) {
     rootIDSet.add(id);
   };
-  removeRoot = function (id) {
+  var removeRoot = function (id) {
     rootIDSet['delete'](id);
   };
-  getRootIDs = function () {
+  var getRootIDs = function () {
     return Array.from(rootIDSet.keys());
   };
 } else {
@@ -56457,31 +56423,31 @@ if (canUseCollections) {
     return parseInt(key.substr(1), 10);
   };
 
-  setItem = function (id, item) {
+  var setItem = function (id, item) {
     var key = getKeyFromID(id);
     itemByKey[key] = item;
   };
-  getItem = function (id) {
+  var getItem = function (id) {
     var key = getKeyFromID(id);
     return itemByKey[key];
   };
-  removeItem = function (id) {
+  var removeItem = function (id) {
     var key = getKeyFromID(id);
     delete itemByKey[key];
   };
-  getItemIDs = function () {
+  var getItemIDs = function () {
     return Object.keys(itemByKey).map(getIDFromKey);
   };
 
-  addRoot = function (id) {
+  var addRoot = function (id) {
     var key = getKeyFromID(id);
     rootByKey[key] = true;
   };
-  removeRoot = function (id) {
+  var removeRoot = function (id) {
     var key = getKeyFromID(id);
     delete rootByKey[key];
   };
-  getRootIDs = function () {
+  var getRootIDs = function () {
     return Object.keys(rootByKey).map(getIDFromKey);
   };
 }
@@ -60937,7 +60903,7 @@ function warning(message) {
   /* eslint-enable no-empty */
 }
 },{}],335:[function(require,module,exports){
-;/*! showdown 21-12-2016 */
+;/*! showdown 11-11-2016 */
 (function(){
 /**
  * Created by Tivie on 13-07-2015.
@@ -60975,11 +60941,6 @@ function getDefaultOpts(simple) {
     simplifiedAutoLink: {
       defaultValue: false,
       describe: 'Turn on/off GFM autolink style',
-      type: 'boolean'
-    },
-    excludeTrailingPunctuationFromURLs: {
-      defaultValue: false,
-      describe: 'Excludes trailing punctuation from links generated with autoLinking',
       type: 'boolean'
     },
     literalMidWordUnderscores: {
@@ -61026,16 +60987,6 @@ function getDefaultOpts(simple) {
       defaultValue: false,
       description: 'Disables the requirement of indenting nested sublists by 4 spaces',
       type: 'boolean'
-    },
-    simpleLineBreaks: {
-      defaultValue: false,
-      description: 'Parses simple line breaks as <br> (GFM Style)',
-      type: 'boolean'
-    },
-    requireSpaceBeforeHeadingText: {
-      defaultValue: false,
-      description: 'Makes adding a space between `#` and the header text mandatory (GFM Style)',
-      type: 'boolean'
     }
   };
   if (simple === false) {
@@ -61064,16 +61015,13 @@ var showdown = {},
         omitExtraWLInCodeBlocks:              true,
         prefixHeaderId:                       'user-content-',
         simplifiedAutoLink:                   true,
-        excludeTrailingPunctuationFromURLs:   true,
         literalMidWordUnderscores:            true,
         strikethrough:                        true,
         tables:                               true,
         tablesHeaderId:                       true,
         ghCodeBlocks:                         true,
         tasklists:                            true,
-        disableForced4SpacesIndentedSublists: true,
-        simpleLineBreaks:                     true,
-        requireSpaceBeforeHeadingText:        true
+        disableForced4SpacesIndentedSublists: true
       },
       vanilla: getDefaultOpts(true)
     };
@@ -61781,7 +61729,7 @@ showdown.Converter = function (converterOptions) {
           outputModifiers.push(ext[i]);
           break;
       }
-      if (ext[i].hasOwnProperty('listeners')) {
+      if (ext[i].hasOwnProperty(listeners)) {
         for (var ln in ext[i].listeners) {
           if (ext[i].listeners.hasOwnProperty(ln)) {
             listen(ln, ext[i].listeners[ln]);
@@ -61922,9 +61870,6 @@ showdown.Converter = function (converterOptions) {
     // Standardize line endings
     text = text.replace(/\r\n/g, '\n'); // DOS to Unix
     text = text.replace(/\r/g, '\n'); // Mac to Unix
-
-    // Stardardize line spaces (nbsp causes trouble in older browsers and some regex flavors)
-    text = text.replace(/\u00A0/g, ' ');
 
     if (options.smartIndentationFix) {
       text = rTrimInputText(text);
@@ -62139,10 +62084,9 @@ showdown.subParser('autoLinks', function (text, options, globals) {
 
   text = globals.converter._dispatch('autoLinks.before', text, options, globals);
 
-  var simpleURLRegex  = /\b(((https?|ftp|dict):\/\/|www\.)[^'">\s]+\.[^'">\s]+)()(?=\s|$)(?!["<>])/gi,
-      simpleURLRegex2 = /\b(((https?|ftp|dict):\/\/|www\.)[^'">\s]+\.[^'">\s]+?)([.!?()]?)(?=\s|$)(?!["<>])/gi,
+  var simpleURLRegex  = /\b(((https?|ftp|dict):\/\/|www\.)[^'">\s]+\.[^'">\s]+)(?=\s|$)(?!["<>])/gi,
       delimUrlRegex   = /<(((https?|ftp|dict):\/\/|www\.)[^'">\s]+)>/gi,
-      simpleMailRegex = /(?:^|\s)([A-Za-z0-9!#$%&'*+-/=?^_`{|}~.]+@[-a-z0-9]+(\.[-a-z0-9]+)*\.[a-z]+)(?:$|\s)/gi,
+      simpleMailRegex = /(?:^|\s)([A-Za-z0-9!#$%&'*+-/=?^_`\{|}~\.]+@[-a-z0-9]+(\.[-a-z0-9]+)*\.[a-z]+)(?:$|\s)/gi,
       delimMailRegex  = /<(?:mailto:)?([-.\w]+@[-a-z0-9]+(\.[-a-z0-9]+)*\.[a-z]+)>/gi;
 
   text = text.replace(delimUrlRegex, replaceLink);
@@ -62151,28 +62095,20 @@ showdown.subParser('autoLinks', function (text, options, globals) {
   // Email addresses: <address@domain.foo>
 
   if (options.simplifiedAutoLink) {
-    if (options.excludeTrailingPunctuationFromURLs) {
-      text = text.replace(simpleURLRegex2, replaceLink);
-    } else {
-      text = text.replace(simpleURLRegex, replaceLink);
-    }
+    text = text.replace(simpleURLRegex, replaceLink);
     text = text.replace(simpleMailRegex, replaceMail);
   }
 
-  function replaceLink(wm, link, m2, m3, trailingPunctuation) {
-    var lnkTxt = link,
-        append = '';
+  function replaceLink(wm, link) {
+    var lnkTxt = link;
     if (/^www\./i.test(link)) {
       link = link.replace(/^www\./i, 'http://www.');
     }
-    if (options.excludeTrailingPunctuationFromURLs && trailingPunctuation) {
-      append = trailingPunctuation;
-    }
-    return '<a href="' + link + '">' + lnkTxt + '</a>' + append;
+    return '<a href="' + link + '">' + lnkTxt + '</a>';
   }
 
-  function replaceMail(wholeMatch, mail) {
-    var unescapedStr = showdown.subParser('unescapeSpecialChars')(mail);
+  function replaceMail(wholeMatch, m1) {
+    var unescapedStr = showdown.subParser('unescapeSpecialChars')(m1);
     return showdown.subParser('encodeEmailAddress')(unescapedStr);
   }
 
@@ -62197,9 +62133,9 @@ showdown.subParser('blockGamut', function (text, options, globals) {
 
   // Do Horizontal Rules:
   var key = showdown.subParser('hashBlock')('<hr />', options, globals);
-  text = text.replace(/^ {0,2}( ?-){3,}[ \t]*$/gm, key);
-  text = text.replace(/^ {0,2}( ?\*){3,}[ \t]*$/gm, key);
-  text = text.replace(/^ {0,2}( ?_){3,}[ \t]*$/gm, key);
+  text = text.replace(/^[ ]{0,2}([ ]?\*[ ]?){3,}[ \t]*$/gm, key);
+  text = text.replace(/^[ ]{0,2}([ ]?\-[ ]?){3,}[ \t]*$/gm, key);
+  text = text.replace(/^[ ]{0,2}([ ]?_[ ]?){3,}[ \t]*$/gm, key);
 
   text = showdown.subParser('lists')(text, options, globals);
   text = showdown.subParser('codeBlocks')(text, options, globals);
@@ -62671,7 +62607,7 @@ showdown.subParser('hashHTMLSpans', function (text, config, globals) {
   var matches = showdown.helper.matchRecursiveRegExp(text, '<code\\b[^>]*>', '</code>', 'gi');
 
   for (var i = 0; i < matches.length; ++i) {
-    text = text.replace(matches[i][0], '~C' + (globals.gHtmlSpans.push(matches[i][0]) - 1) + 'C');
+    text = text.replace(matches[i][0], '~L' + (globals.gHtmlSpans.push(matches[i][0]) - 1) + 'L');
   }
   return text;
 });
@@ -62683,7 +62619,7 @@ showdown.subParser('unhashHTMLSpans', function (text, config, globals) {
   'use strict';
 
   for (var i = 0; i < globals.gHtmlSpans.length; ++i) {
-    text = text.replace('~C' + i + 'C', globals.gHtmlSpans[i]);
+    text = text.replace('~L' + i + 'L', globals.gHtmlSpans[i]);
   }
 
   return text;
@@ -62747,9 +62683,7 @@ showdown.subParser('headers', function (text, options, globals) {
   //  ...
   //  ###### Header 6
   //
-  var atxStyle = (options.requireSpaceBeforeHeadingText) ? /^(#{1,6})[ \t]+(.+?)[ \t]*#*\n+/gm : /^(#{1,6})[ \t]*(.+?)[ \t]*#*\n+/gm;
-
-  text = text.replace(atxStyle, function (wholeMatch, m1, m2) {
+  text = text.replace(/^(#{1,6})[ \t]*(.+?)[ \t]*#*\n+/gm, function (wholeMatch, m1, m2) {
     var span = showdown.subParser('spanGamut')(m2, options, globals),
         hID = (options.noHeaderId) ? '' : ' id="' + headerId(m2) + '"',
         hLevel = headerLevelStart - 1 + m1.length,
@@ -62890,8 +62824,8 @@ showdown.subParser('italicsAndBold', function (text, options, globals) {
  */
 showdown.subParser('lists', function (text, options, globals) {
   'use strict';
-  text = globals.converter._dispatch('lists.before', text, options, globals);
 
+  text = globals.converter._dispatch('lists.before', text, options, globals);
   /**
    * Process the contents of a single ordered or unordered list, splitting it
    * into individual list items.
@@ -62957,18 +62891,6 @@ showdown.subParser('lists', function (text, options, globals) {
         });
       }
 
-      // ISSUE #312
-      // This input: - - - a
-      // causes trouble to the parser, since it interprets it as:
-      // <ul><li><li><li>a</li></li></li></ul>
-      // instead of:
-      // <ul><li>- - a</li></ul>
-      // So, to prevent it, we will put a marker (~A)in the beginning of the line
-      // Kind of hackish/monkey patching, but seems more effective than overcomplicating the list parser
-      item = item.replace(/^([-*+]|\d\.)[ \t]+[\S\n ]*/g, function (wm2) {
-        return '~A' + wm2;
-      });
-
       // m1 - Leading line or
       // Has a double return (multi paragraph) or
       // Has sublist
@@ -62979,20 +62901,13 @@ showdown.subParser('lists', function (text, options, globals) {
         // Recursion for sub-lists:
         item = showdown.subParser('lists')(item, options, globals);
         item = item.replace(/\n$/, ''); // chomp(item)
-        item = showdown.subParser('hashHTMLBlocks')(item, options, globals);
-        item = item.replace(/\n\n+/g, '\n\n');
         if (isParagraphed) {
           item = showdown.subParser('paragraphs')(item, options, globals);
         } else {
           item = showdown.subParser('spanGamut')(item, options, globals);
         }
       }
-
-      // now we need to remove the marker (~A)
-      item = item.replace('~A', '');
-      // we can finally wrap the line in list item tags
       item =  '<li' + bulletStyle + '>' + item + '</li>\n';
-
       return item;
     });
 
@@ -63069,6 +62984,7 @@ showdown.subParser('lists', function (text, options, globals) {
 
   // strip sentinel
   text = text.replace(/~0/, '');
+
   text = globals.converter._dispatch('lists.after', text, options, globals);
   return text;
 });
@@ -63202,14 +63118,8 @@ showdown.subParser('spanGamut', function (text, options, globals) {
   text = showdown.subParser('italicsAndBold')(text, options, globals);
   text = showdown.subParser('strikethrough')(text, options, globals);
 
-  // Do hard breaks
-  if (options.simpleLineBreaks) {
-    // GFM style hard breaks
-    text = text.replace(/\b\n\b/g, '<br />\n');
-  } else {
-    // Vanilla hard breaks
-    text = text.replace(/\b  +\n\b/g, '<br />\n');
-  }
+  // Do hard breaks:
+  text = text.replace(/  +\n/g, ' <br />\n');
 
   text = globals.converter._dispatch('spanGamut.after', text, options, globals);
   return text;
@@ -66002,13 +65912,11 @@ function extend() {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.SET_SEARCH_VALUE = exports.CHANGE_VALUE = exports.FETCH_INDEX = exports.FETCH_ARTICLE = exports.FETCH_TAG = exports.FETCH_CATEGORY = undefined;
+exports.SET_SEARCH_VALUE = exports.CHANGE_VALUE = exports.FETCH_INDEX = exports.FETCH_TAG = exports.FETCH_CATEGORY = undefined;
 exports.fetchCategory = fetchCategory;
 exports.fetchCategoryAsync = fetchCategoryAsync;
 exports.fetchTag = fetchTag;
 exports.fetchTagAsync = fetchTagAsync;
-exports.fetchArticle = fetchArticle;
-exports.fetchArticleAsync = fetchArticleAsync;
 exports.fetchIndex = fetchIndex;
 exports.fetchIndexAsync = fetchIndexAsync;
 exports.searchArticleAsync = searchArticleAsync;
@@ -66072,23 +65980,6 @@ function fetchTagAsync() {
 }
 
 // Action creator
-var FETCH_ARTICLE = exports.FETCH_ARTICLE = 'FETCH_ARTICLE';
-function fetchArticle(payload) {
-  return {
-    type: FETCH_ARTICLE,
-    payload: payload
-  };
-}
-// redux-thunk
-function fetchArticleAsync(callback, id) {
-  return function (dispatch) {
-    return callback(id).then(function (res) {
-      return dispatch(fetchArticle(res));
-    });
-  };
-}
-
-// Action creator
 var FETCH_INDEX = exports.FETCH_INDEX = 'FETCH_INDEX';
 function fetchIndex(payload) {
   return {
@@ -66138,7 +66029,9 @@ function setSearchValue(payload) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.GET_TAG_NAME = undefined;
+exports.GET_TAG_NAME = exports.FETCH_ARTICLE = undefined;
+exports.fetchArticle = fetchArticle;
+exports.fetchArticleAsync = fetchArticleAsync;
 exports.getTagName = getTagName;
 exports.getTagNameAsync = getTagNameAsync;
 
@@ -66152,9 +66045,24 @@ var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// Article系
-// TagIDからTag名取得
+// Action creator
+var FETCH_ARTICLE = exports.FETCH_ARTICLE = 'FETCH_ARTICLE';
+function fetchArticle(payload) {
+  return {
+    type: FETCH_ARTICLE,
+    payload: payload
+  };
+}
+// redux-thunk
+function fetchArticleAsync(callback, id) {
+  return function (dispatch) {
+    return callback(id).then(function (res) {
+      return dispatch(fetchArticle(res));
+    });
+  };
+}
 
+// TagIDからTag名取得
 var GET_TAG_NAME = exports.GET_TAG_NAME = 'GET_TAG_NAME';
 function getTagName(payload) {
   return {
@@ -66209,7 +66117,7 @@ var _routes = require('./routes.jsx');
 
 var _store = require('./store');
 
-var _appReducer = require('./reducers/appReducer');
+var _indexReducer = require('./reducers/indexReducer');
 
 var _rootReducer = require('./reducers/rootReducer');
 
@@ -66220,23 +66128,18 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 // 1. Reducers
 var reducers = (0, _redux.combineReducers)({
   root: _rootReducer.rootReducer,
-  app: _appReducer.appReducer,
+  index: _indexReducer.indexReducer,
   archive: _archiveReducer.archiveReducer,
   routing: _reactRouterRedux.routerReducer
 });
 
 // 2. States
-var rootState = {
-  inputValue: '',
-  searchValue: ''
-};
-var preloadedState = window.__PRELOADED_STATE__.app;
-var archiveState = {
-  tag: []
-};
+var rootState = window.__PRELOADED_STATE__.root;
+var indexState = window.__PRELOADED_STATE__.index;
+var archiveState = window.__PRELOADED_STATE__.archive;
 var initialState = {
   root: rootState,
-  app: preloadedState,
+  index: indexState,
   archive: archiveState
 };
 
@@ -66261,7 +66164,7 @@ _reactDom2.default.render(_react2.default.createElement(
   )
 ), document.querySelector('.content'));
 
-},{"./reducers/appReducer":364,"./reducers/archiveReducer":365,"./reducers/rootReducer":366,"./routes.jsx":367,"./store":368,"react":315,"react-dom":119,"react-redux":248,"react-router":284,"react-router-redux":254,"redux":333,"redux-thunk":327}],358:[function(require,module,exports){
+},{"./reducers/archiveReducer":364,"./reducers/indexReducer":365,"./reducers/rootReducer":366,"./routes.jsx":367,"./store":368,"react":315,"react-dom":119,"react-redux":248,"react-router":284,"react-router-redux":254,"redux":333,"redux-thunk":327}],358:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66279,8 +66182,6 @@ var _reactRedux = require('react-redux');
 var _nodeFetch = require('node-fetch');
 
 var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
-
-var _action = require('../actions/action');
 
 var _archiveAction = require('../actions/archiveAction');
 
@@ -66320,8 +66221,10 @@ var Archive = function (_React$Component) {
   }, {
     key: 'componentWillUpdate',
     value: function componentWillUpdate(nextProps) {
-      console.log(nextProps);
-      // return this.props.handleGet(nextProps.article.tags);
+      console.log(this.props.article.tags);
+      if (this.props.gettedTag === false) {
+        return this.props.handleGet(this.props.article.tags);
+      }
     }
   }, {
     key: 'render',
@@ -66332,7 +66235,7 @@ var Archive = function (_React$Component) {
   }], [{
     key: 'handleFetch',
     value: function handleFetch(dispatch, renderProps) {
-      return dispatch((0, _action.fetchArticleAsync)(this.fetchData, renderProps.params.id));
+      return dispatch((0, _archiveAction.fetchArticleAsync)(this.fetchData, renderProps.params.id));
     }
   }, {
     key: 'fetchData',
@@ -66360,17 +66263,19 @@ Archive.propTypes = {
 
 // Connect to Redux
 function mapStateToProps(state) {
+  console.log(state);
   return {
-    category: state.app.category,
-    tag: state.app.tag,
-    article: state.app.article,
-    tags: state.archive.tag
+    category: state.index.category,
+    tag: state.index.tag,
+    article: state.archive.article,
+    tags: state.archive.tag,
+    gettedTag: state.archive.gettedTag
   };
 }
 function mapDispatchToProps(dispatch) {
   return {
     handleFetch: function handleFetch(id, callback) {
-      return dispatch((0, _action.fetchArticleAsync)(callback, id));
+      return dispatch((0, _archiveAction.fetchArticleAsync)(callback, id));
     },
     handleGet: function handleGet(array) {
       return dispatch((0, _archiveAction.getTagNameAsync)(array));
@@ -66380,7 +66285,7 @@ function mapDispatchToProps(dispatch) {
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Archive);
 
-},{"../../config":1,"../actions/action":355,"../actions/archiveAction":356,"../views/archive/Article.jsx":369,"node-fetch":94,"react":315,"react-redux":248}],359:[function(require,module,exports){
+},{"../../config":1,"../actions/archiveAction":356,"../views/archive/Article.jsx":369,"node-fetch":94,"react":315,"react-redux":248}],359:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66471,7 +66376,7 @@ var Category = function (_React$Component) {
 
 function mapStateToProps(state) {
   return {
-    index: state.app.index
+    index: state.index.index
   };
 }
 function mapDispatchToProps(dispatch) {
@@ -66576,7 +66481,7 @@ var Index = function (_React$Component) {
 
 function mapStateToProps(state) {
   return {
-    index: state.app.index
+    index: state.index.index
   };
 }
 function mapDispatchToProps(dispatch) {
@@ -66786,7 +66691,7 @@ Search.propTypes = {
 // Connect to Redux
 function mapStateToProps(state) {
   return {
-    index: state.app.index,
+    index: state.index.index,
     keyword: state.root.searchValue
   };
 }
@@ -66893,7 +66798,7 @@ var Tag = function (_React$Component) {
 
 function mapStateToProps(state) {
   return {
-    index: state.app.index
+    index: state.index.index
   };
 }
 function mapDispatchToProps(dispatch) {
@@ -66912,19 +66817,46 @@ exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.appReducer = undefined;
+exports.archiveReducer = undefined;
 
-var _action = require('../actions/action');
+var _archiveAction = require('../actions/archiveAction');
 
-var appReducer = exports.appReducer = function appReducer() {
+var archiveReducer = exports.archiveReducer = function archiveReducer() {
   var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
   var action = arguments[1];
 
   switch (action.type) {
-    case _action.FETCH_ARTICLE:
+    case _archiveAction.FETCH_ARTICLE:
       return Object.assign({}, state, {
-        article: action.payload
+        article: action.payload,
+        currentId: action.payload.id,
+        gettedTag: false
       });
+    case _archiveAction.GET_TAG_NAME:
+      return Object.assign({}, state, {
+        tag: action.payload,
+        gettedTag: true
+      });
+    default:
+      return state;
+  }
+};
+
+},{"../actions/archiveAction":356}],365:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.indexReducer = undefined;
+
+var _action = require('../actions/action');
+
+var indexReducer = exports.indexReducer = function indexReducer() {
+  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var action = arguments[1];
+
+  switch (action.type) {
     case _action.FETCH_INDEX:
       return Object.assign({}, state, {
         index: action.payload
@@ -66942,31 +66874,7 @@ var appReducer = exports.appReducer = function appReducer() {
   }
 };
 
-},{"../actions/action":355}],365:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.archiveReducer = undefined;
-
-var _archiveAction = require('../actions/archiveAction');
-
-var archiveReducer = exports.archiveReducer = function archiveReducer() {
-  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-  var action = arguments[1];
-
-  switch (action.type) {
-    case _archiveAction.GET_TAG_NAME:
-      return Object.assign({}, state, {
-        tag: action.payload
-      });
-    default:
-      return state;
-  }
-};
-
-},{"../actions/archiveAction":356}],366:[function(require,module,exports){
+},{"../actions/action":355}],366:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
