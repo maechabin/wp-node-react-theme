@@ -1,9 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import fetch from 'node-fetch';
-import { fetchIndexAsync } from '../actions/action';
+import { fetchIndexAsync, resetList, saveRoutingKey } from '../actions/indexAction';
 import config from '../../config';
-import _ from 'lodash';
 
 // view files
 import List from '../views/index/List.jsx';
@@ -25,9 +24,11 @@ class Index extends React.Component {
     });
   }
 
-  componentWillMount() {
-    console.log('index');
-    return this.props.handleFetch(Index.fetchData);
+  componentDidMount() {
+    return [
+      this.props.handleInit(this.props.routingKey),
+      this.props.handleFetch(Index.fetchData),
+    ];
   }
 
   render() {
@@ -36,17 +37,29 @@ class Index extends React.Component {
     );
   }
 }
+Index.propTypes = {
+  routingKey: React.PropTypes.string,
+  handleInit: React.PropTypes.func,
+  handleFetch: React.PropTypes.func,
+};
 
 // Connect to Redux
 function mapStateToProps(state) {
   return {
     index: state.index.index,
+    resetList: state.index.resetList,
+    routingKey: state.routing.locationBeforeTransitions.key,
   };
 }
 function mapDispatchToProps(dispatch) {
   return {
     handleFetch(callback) {
       return dispatch(fetchIndexAsync(callback));
+    },
+    handleInit(key) {
+      return [resetList(), saveRoutingKey(key)].forEach(
+        action => dispatch(action),
+      );
     },
   };
 }

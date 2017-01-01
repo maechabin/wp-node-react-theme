@@ -25,37 +25,33 @@ class Archive extends React.Component {
   }
 
   componentDidMount() {
-    return this.props.handleFetch(this.props.params.id, Archive.fetchData);
-  }
-
-  componentWillUpdate(nextProps) {
-    console.log(this.props.article.tags);
-    if (this.props.gettedTag === false) {
-      return this.props.handleGet(this.props.article.tags);
-    }
+    return Promise.all([
+      this.props.handleFetch(this.props.params.id, Archive.fetchData),
+    ]).then(() => {
+      if (this.props.gettedTag === false && Object.prototype.toString.call(this.props.article.tags) === '[object Array]') {
+        return this.props.handleGet(this.props.article.tags);
+      }
+      return false;
+    });
   }
 
   render() {
-    console.dir(this.props);
     return (
       <Article {...this.props} />
     );
   }
 }
 Archive.propTypes = {
-  params: React.PropTypes.object,
   handleFetch: React.PropTypes.func,
   handleGet: React.PropTypes.func,
 };
 
 // Connect to Redux
 function mapStateToProps(state) {
-  console.log(state);
   return {
     category: state.index.category,
-    tag: state.index.tag,
     article: state.archive.article,
-    tags: state.archive.tag,
+    tags: state.archive.tags,
     gettedTag: state.archive.gettedTag,
   };
 }

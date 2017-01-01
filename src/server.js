@@ -8,11 +8,13 @@ import { combineReducers, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
 import serialize from 'serialize-javascript';
 import { Provider } from 'react-redux';
+
+import { rootState, indexState, archiveState } from './state';
 import { indexReducer } from './reducers/indexReducer';
 import { rootReducer } from './reducers/rootReducer';
 import { archiveReducer } from './reducers/archiveReducer';
 import { configureStore } from './store';
-import { fetchCategoryAsync, fetchTagAsync } from './actions/action';
+import { fetchCategoryAsync, fetchTagAsync } from './actions/indexAction';
 
 import config from '../config';
 import { routes } from './routes.jsx';
@@ -35,21 +37,6 @@ function handleRender(req, res) {
   });
 
   // 2. States
-  const rootState = {
-    inputValue: '',
-    searchValue: '',
-  };
-  const indexState = {
-    category: {},
-    tag: {},
-    index: [],
-  };
-  const archiveState = {
-    article: {},
-    currentId: null,
-    tag: [],
-    gettedTag: false,
-  };
   const initialState = {
     root: rootState,
     index: indexState,

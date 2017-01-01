@@ -1,9 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import fetch from 'node-fetch';
-import { searchArticleAsync } from '../actions/action';
+import { searchArticleAsync, resetList, saveRoutingKey } from '../actions/indexAction';
 import config from '../../config';
-import _ from 'lodash';
 
 // view files
 import List from '../views/index/List.jsx';
@@ -25,8 +24,11 @@ class Category extends React.Component {
     });
   }
 
-  componentWillMount() {
-    return this.props.handleFetch(this.props.params.category, Category.fetchData);
+  componentDidMount() {
+    return [
+      this.props.handleInit(this.props.routingKey),
+      this.props.handleFetch(this.props.params.category, Category.fetchData),
+    ];
   }
 
   render() {
@@ -35,17 +37,30 @@ class Category extends React.Component {
     );
   }
 }
+Category.propTypes = {
+  routingKey: React.PropTypes.string,
+  category: React.PropTypes.string,
+  handleInit: React.PropTypes.func,
+  handleFetch: React.PropTypes.func,
+};
 
 // Connect to Redux
 function mapStateToProps(state) {
   return {
     index: state.index.index,
+    resetList: state.index.resetList,
+    routingKey: state.routing.locationBeforeTransitions.key,
   };
 }
 function mapDispatchToProps(dispatch) {
   return {
     handleFetch(category, callback) {
       return dispatch(searchArticleAsync(callback, category));
+    },
+    handleInit(key) {
+      return [resetList(), saveRoutingKey(key)].forEach(
+        action => dispatch(action),
+      );
     },
   };
 }

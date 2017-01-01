@@ -1,5 +1,5 @@
-import config from '../../config';
 import fetch from 'node-fetch';
+import config from '../../config';
 
 // Action creator
 export const FETCH_ARTICLE = 'FETCH_ARTICLE';
@@ -11,7 +11,7 @@ export function fetchArticle(payload) {
 }
 // redux-thunk
 export function fetchArticleAsync(callback, id) {
-  return dispatch => {
+  return (dispatch) => {
     return callback(id).then(
       res => dispatch(fetchArticle(res)),
     );
@@ -29,7 +29,7 @@ export function getTagName(payload) {
 }
 
 export function getTagNameAsync(array) {
-  return dispatch => {
+  return (dispatch) => {
     const tags = array.map(
       id => fetch(`${config.blogUrl}/wp-json/wp/v2/tags/${id}`, {
         method: 'get',
@@ -40,9 +40,18 @@ export function getTagNameAsync(array) {
         }
         return console.dir(res);
       }).then(
-        res => res,
+        (res) => {
+          return {
+            name: res.name,
+            slug: res.slug,
+          };
+        },
       ),
     );
-    return dispatch(getTagName(tags));
+    Promise.all(tags).then(
+      (res) => {
+        dispatch(getTagName(res));
+      },
+    );
   };
 }

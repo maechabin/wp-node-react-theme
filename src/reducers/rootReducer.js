@@ -1,4 +1,4 @@
-import { CHANGE_VALUE, SET_SEARCH_VALUE } from '../actions/action';
+import { CHANGE_VALUE, SET_SEARCH_VALUE } from '../actions/indexAction';
 
 export const rootReducer = (state = {}, action) => {
   switch (action.type) {

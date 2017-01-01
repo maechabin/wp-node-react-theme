@@ -1,12 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router';
 import Showdown from 'showdown';
 
 import ArticleBreadcrumb from './ArticleBreadcrumb.jsx';
 import ArticleCategory from './ArticleCategory.jsx';
 import ArticleTag from './ArticleTag.jsx';
 
-const Article = props => {
+const Article = (props) => {
   function rawMarkup(contentType) {
     const converter = new Showdown.Converter();
     const markup = converter.makeHtml(props.article[contentType].rendered.toString());
@@ -22,6 +21,7 @@ const Article = props => {
       <ArticleTag {...props} />
       <div dangerouslySetInnerHTML={rawMarkup('content')} />
       <ArticleCategory {...props} />
+      <ArticleTag {...props} />
     </div>
   );
 
@@ -30,8 +30,7 @@ const Article = props => {
   );
 };
 Article.propTypes = {
-  article: React.PropTypes.object,
-  params: React.PropTypes.object,
+
 };
 
 export default Article;

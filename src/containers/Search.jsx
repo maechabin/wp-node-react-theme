@@ -1,9 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import fetch from 'node-fetch';
-import { searchArticleAsync } from '../actions/action';
+import { searchArticleAsync, resetList, saveRoutingKey } from '../actions/indexAction';
 import config from '../../config';
-import _ from 'lodash';
 
 // view files
 import List from '../views/index/List.jsx';
@@ -25,8 +24,11 @@ class Search extends React.Component {
     });
   }
 
-  componentWillMount() {
-    return this.props.handleFetch(this.props.params.keyword, Search.fetchData);
+  componentDidMount() {
+    return [
+      this.props.handleInit(this.props.routingKey),
+      this.props.handleFetch(this.props.params.keyword, Search.fetchData),
+    ];
   }
 
   componentWillUpdate(nextProps) {
@@ -48,6 +50,8 @@ class Search extends React.Component {
 Search.propTypes = {
   params: React.PropTypes.object,
   keyword: React.PropTypes.string,
+  routingKey: React.PropTypes.string,
+  handleInit: React.PropTypes.func,
   handleFetch: React.PropTypes.func,
 };
 
@@ -56,12 +60,19 @@ function mapStateToProps(state) {
   return {
     index: state.index.index,
     keyword: state.root.searchValue,
+    resetList: state.index.resetList,
+    routingKey: state.routing.locationBeforeTransitions.key,
   };
 }
 function mapDispatchToProps(dispatch) {
   return {
     handleFetch(keyword, callback) {
       return dispatch(searchArticleAsync(callback, keyword));
+    },
+    handleInit(key) {
+      return [resetList(), saveRoutingKey(key)].forEach(
+        action => dispatch(action),
+      );
     },
   };
 }

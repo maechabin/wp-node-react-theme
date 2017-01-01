@@ -1,5 +1,20 @@
-import config from '../../config';
 import fetch from 'node-fetch';
+import config from '../../config';
+
+export const RESET_LIST = 'RESET_LISET';
+export function resetList() {
+  return {
+    type: RESET_LIST,
+  };
+}
+
+export const SAVE_ROUTING_KEY = 'SAVE_ROUTING_KEY';
+export function saveRoutingKey(payload) {
+  return {
+    type: SAVE_ROUTING_KEY,
+    payload,
+  };
+}
 
 export const FETCH_CATEGORY = 'FETCH_CATEGORY';
 export function fetchCategory(payload) {
@@ -9,7 +24,7 @@ export function fetchCategory(payload) {
   };
 }
 export function fetchCategoryAsync() {
-  return dispatch => {
+  return (dispatch) => {
     return fetch(`${config.blogUrl}/wp-json/wp/v2/categories`, {
       method: 'get',
       mode: 'cors',
@@ -32,7 +47,7 @@ export function fetchTag(payload) {
   };
 }
 export function fetchTagAsync() {
-  return dispatch => {
+  return (dispatch) => {
     return fetch(`${config.blogUrl}/wp-json/wp/v2/tags`, {
       method: 'get',
       mode: 'cors',
@@ -57,7 +72,7 @@ export function fetchIndex(payload) {
 }
 // redux-thunk
 export function fetchIndexAsync(callback) {
-  return dispatch => {
+  return (dispatch) => {
     return callback().then(
       res => dispatch(fetchIndex(res)),
     );
@@ -69,7 +84,7 @@ export function fetchIndexAsync(callback) {
 // fetchIndexでディスパッチ
 // redux-thunk
 export function searchArticleAsync(callback, keyword) {
-  return dispatch => {
+  return (dispatch) => {
     return callback(keyword).then(
       res => dispatch(fetchIndex(res)),
     );

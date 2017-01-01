@@ -6,11 +6,12 @@ export const archiveReducer = (state = {}, action) => {
       return Object.assign({}, state, {
         article: action.payload,
         currentId: action.payload.id,
+        tags: [],
         gettedTag: false,
       });
     case GET_TAG_NAME:
       return Object.assign({}, state, {
-        tag: action.payload,
+        tags: action.payload,
         gettedTag: true,
       });
     default:
