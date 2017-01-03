@@ -9,16 +9,19 @@ import List from '../views/index/List.jsx';
 
 class Tag extends React.Component {
   static handleFetch(dispatch, renderProps) {
-    return dispatch(searchArticleAsync(this.fetchData, renderProps.params.tag));
+    return dispatch(
+      searchArticleAsync(this.fetchData, renderProps.params.tag, renderProps.params.page),
+    );
   }
 
-  static fetchData(tag) {
-    return fetch(`${config.blogUrl}/wp-json/wp/v2/posts?filter[tag]=${tag}`, {
+  static fetchData(tag, page = 1) {
+    const params = `?context=embed&filter[tag]=${tag}&per_page=${config.perPage}&page=${page}`;
+    return fetch(`${config.blogUrl}/wp-json/wp/v2/posts${params}`, {
       method: 'get',
       mode: 'cors',
     }).then((res) => {
       if (res.status === 200) {
-        return res.json();
+        return [res.json(), res.headers._headers];
       }
       return console.dir(res);
     });
@@ -27,8 +30,20 @@ class Tag extends React.Component {
   componentDidMount() {
     return [
       this.props.handleInit(this.props.routingKey),
-      this.props.handleFetch(this.props.params.tag, Tag.fetchData),
+      this.props.handleFetch(this.props.params.tag, Tag.fetchData, this.props.params.page),
     ];
+  }
+
+  componentWillUpdate(nextProps) {
+    if (nextProps.params.page !== '' && nextProps.params.page !== this.props.params.page) {
+      return [
+        this.props.handleFetch(
+          this.props.params.tag,
+          Tag.fetchData,
+          nextProps.params.page),
+      ];
+    }
+    return false;
   }
 
   render() {
@@ -48,16 +63,19 @@ function mapStateToProps(state) {
   return {
     index: state.index.index,
     resetList: state.index.resetList,
+    total: Number(state.index.total),
+    totalPages: Number(state.index.totalPages),
+    currentPage: state.index.currentPage,
     routingKey: state.routing.locationBeforeTransitions.key,
   };
 }
 function mapDispatchToProps(dispatch) {
   return {
-    handleFetch(tag, callback) {
-      return dispatch(searchArticleAsync(callback, tag));
+    handleFetch(tag, callback, page) {
+      return dispatch(searchArticleAsync(callback, tag, page));
     },
     handleInit(key) {
-      return [resetList(), saveRoutingKey(key)].forEach(
+      return [resetList(), saveRoutingKey(key)].map(
         action => dispatch(action),
       );
     },

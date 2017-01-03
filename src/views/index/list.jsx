@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router';
+import Pagination from './Pagination.jsx';
 
 const List = (props) => {
   const list = (props.resetList && props.routingKey !== '') ? '' : props.index.map(
@@ -13,6 +14,7 @@ const List = (props) => {
   return (
     <main className="index">
       <ul>{list}</ul>
+      <Pagination {...props} />
     </main>
   );
 };

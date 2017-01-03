@@ -8,17 +8,18 @@ import config from '../../config';
 import List from '../views/index/List.jsx';
 
 class Index extends React.Component {
-  static handleFetch(dispatch) {
-    return dispatch(fetchIndexAsync(this.fetchData));
+  static handleFetch(dispatch, renderProps) {
+    return dispatch(fetchIndexAsync(this.fetchData, renderProps.params.page));
   }
 
-  static fetchData() {
-    return fetch(`${config.blogUrl}/wp-json/wp/v2/posts`, {
+  static fetchData(page = 1) {
+    const params = `?context=embed&per_page=${config.perPage}&page=${page}`;
+    return fetch(`${config.blogUrl}/wp-json/wp/v2/posts${params}`, {
       method: 'get',
       mode: 'cors',
     }).then((res) => {
       if (res.status === 200) {
-        return res.json();
+        return [res.json(), res.headers._headers];
       }
       return console.dir(res);
     });
@@ -27,8 +28,18 @@ class Index extends React.Component {
   componentDidMount() {
     return [
       this.props.handleInit(this.props.routingKey),
-      this.props.handleFetch(Index.fetchData),
+      this.props.handleFetch(Index.fetchData, this.props.params.page),
     ];
+  }
+
+  componentWillUpdate(nextProps) {
+    if (nextProps.params.page !== '' && nextProps.params.page !== this.props.params.page) {
+      return [
+        this.props.handleInit(this.props.routingKey),
+        this.props.handleFetch(Index.fetchData, nextProps.params.page),
+      ];
+    }
+    return false;
   }
 
   render() {
@@ -48,16 +59,19 @@ function mapStateToProps(state) {
   return {
     index: state.index.index,
     resetList: state.index.resetList,
+    total: Number(state.index.total),
+    totalPages: Number(state.index.totalPages),
+    currentPage: state.index.currentPage,
     routingKey: state.routing.locationBeforeTransitions.key,
   };
 }
 function mapDispatchToProps(dispatch) {
   return {
-    handleFetch(callback) {
-      return dispatch(fetchIndexAsync(callback));
+    handleFetch(callback, page) {
+      return dispatch(fetchIndexAsync(callback, page));
     },
     handleInit(key) {
-      return [resetList(), saveRoutingKey(key)].forEach(
+      return [resetList(), saveRoutingKey(key)].map(
         action => dispatch(action),
       );
     },

@@ -62,6 +62,23 @@ export function fetchTagAsync() {
   };
 }
 
+export const SET_PAGINATION = 'SET_PAGINATION';
+export function setPagination(payload) {
+  return {
+    type: SET_PAGINATION,
+    payload,
+  };
+}
+
+export const SET_CURRENT_PAGE_NUMBER = 'SET_CURRENT_PAGE_NUMBER';
+export function setCurrentPageNumber(payload) {
+  return {
+    type: SET_CURRENT_PAGE_NUMBER,
+    payload,
+  };
+}
+
+
 // Action creator
 export const FETCH_INDEX = 'FETCH_INDEX';
 export function fetchIndex(payload) {
@@ -71,10 +88,13 @@ export function fetchIndex(payload) {
   };
 }
 // redux-thunk
-export function fetchIndexAsync(callback) {
+export function fetchIndexAsync(callback, page) {
   return (dispatch) => {
-    return callback().then(
-      res => dispatch(fetchIndex(res)),
+    return callback(page).then(
+      res => ([
+        Promise.resolve(res[0]).then(index => dispatch(fetchIndex(index))),
+        dispatch(setPagination(res[1])),
+      ]),
     );
   };
 }
@@ -83,10 +103,13 @@ export function fetchIndexAsync(callback) {
 // 検索
 // fetchIndexでディスパッチ
 // redux-thunk
-export function searchArticleAsync(callback, keyword) {
+export function searchArticleAsync(callback, keyword, page) {
   return (dispatch) => {
-    return callback(keyword).then(
-      res => dispatch(fetchIndex(res)),
+    return callback(keyword, page).then(
+      res => ([
+        Promise.resolve(res[0]).then(index => dispatch(fetchIndex(index))),
+        dispatch(setPagination(res[1])),
+      ]),
     );
   };
 }

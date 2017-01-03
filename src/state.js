@@ -8,6 +8,9 @@ export const indexState = {
   index: [],
   routingKey: '',
   resetList: true,
+  total: 0,
+  totalPages: 1,
+  currentPage: 2,
 };
 export const archiveState = {
   article: {},

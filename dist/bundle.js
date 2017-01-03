@@ -7,7 +7,8 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = {
   blogTitle: 'LifeGadget',
   blogTitleTag: 'LifeGadget（ライフガジェット）',
-  blogUrl: 'http://localhost:8888'
+  blogUrl: 'http://localhost:8888',
+  perPage: 20
 };
 
 },{}],2:[function(require,module,exports){
@@ -10680,8 +10681,7 @@ function baseGetTag(value) {
   if (value == null) {
     return value === undefined ? undefinedTag : nullTag;
   }
-  value = Object(value);
-  return (symToStringTag && symToStringTag in value)
+  return (symToStringTag && symToStringTag in Object(value))
     ? getRawTag(value)
     : objectToString(value);
 }
@@ -66093,13 +66093,15 @@ function getTagNameAsync(array) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.SET_SEARCH_VALUE = exports.CHANGE_VALUE = exports.FETCH_INDEX = exports.FETCH_TAG = exports.FETCH_CATEGORY = exports.SAVE_ROUTING_KEY = exports.RESET_LIST = undefined;
+exports.SET_SEARCH_VALUE = exports.CHANGE_VALUE = exports.FETCH_INDEX = exports.SET_CURRENT_PAGE_NUMBER = exports.SET_PAGINATION = exports.FETCH_TAG = exports.FETCH_CATEGORY = exports.SAVE_ROUTING_KEY = exports.RESET_LIST = undefined;
 exports.resetList = resetList;
 exports.saveRoutingKey = saveRoutingKey;
 exports.fetchCategory = fetchCategory;
 exports.fetchCategoryAsync = fetchCategoryAsync;
 exports.fetchTag = fetchTag;
 exports.fetchTagAsync = fetchTagAsync;
+exports.setPagination = setPagination;
+exports.setCurrentPageNumber = setCurrentPageNumber;
 exports.fetchIndex = fetchIndex;
 exports.fetchIndexAsync = fetchIndexAsync;
 exports.searchArticleAsync = searchArticleAsync;
@@ -66177,6 +66179,22 @@ function fetchTagAsync() {
   };
 }
 
+var SET_PAGINATION = exports.SET_PAGINATION = 'SET_PAGINATION';
+function setPagination(payload) {
+  return {
+    type: SET_PAGINATION,
+    payload: payload
+  };
+}
+
+var SET_CURRENT_PAGE_NUMBER = exports.SET_CURRENT_PAGE_NUMBER = 'SET_CURRENT_PAGE_NUMBER';
+function setCurrentPageNumber(payload) {
+  return {
+    type: SET_CURRENT_PAGE_NUMBER,
+    payload: payload
+  };
+}
+
 // Action creator
 var FETCH_INDEX = exports.FETCH_INDEX = 'FETCH_INDEX';
 function fetchIndex(payload) {
@@ -66186,10 +66204,12 @@ function fetchIndex(payload) {
   };
 }
 // redux-thunk
-function fetchIndexAsync(callback) {
+function fetchIndexAsync(callback, page) {
   return function (dispatch) {
-    return callback().then(function (res) {
-      return dispatch(fetchIndex(res));
+    return callback(page).then(function (res) {
+      return [Promise.resolve(res[0]).then(function (index) {
+        return dispatch(fetchIndex(index));
+      }), dispatch(setPagination(res[1]))];
     });
   };
 }
@@ -66197,10 +66217,12 @@ function fetchIndexAsync(callback) {
 // 検索
 // fetchIndexでディスパッチ
 // redux-thunk
-function searchArticleAsync(callback, keyword) {
+function searchArticleAsync(callback, keyword, page) {
   return function (dispatch) {
-    return callback(keyword).then(function (res) {
-      return dispatch(fetchIndex(res));
+    return callback(keyword, page).then(function (res) {
+      return [Promise.resolve(res[0]).then(function (index) {
+        return dispatch(fetchIndex(index));
+      }), dispatch(setPagination(res[1]))];
     });
   };
 }
@@ -66463,7 +66485,15 @@ var Category = function (_React$Component) {
   _createClass(Category, [{
     key: 'componentDidMount',
     value: function componentDidMount() {
-      return [this.props.handleInit(this.props.routingKey), this.props.handleFetch(this.props.params.category, Category.fetchData)];
+      return [this.props.handleInit(this.props.routingKey), this.props.handleFetch(this.props.params.category, Category.fetchData, this.props.params.page)];
+    }
+  }, {
+    key: 'componentWillUpdate',
+    value: function componentWillUpdate(nextProps) {
+      if (nextProps.params.page !== '' && nextProps.params.page !== this.props.params.page) {
+        return [this.props.handleFetch(this.props.params.category, Category.fetchData, nextProps.params.page)];
+      }
+      return false;
     }
   }, {
     key: 'render',
@@ -66473,17 +66503,20 @@ var Category = function (_React$Component) {
   }], [{
     key: 'handleFetch',
     value: function handleFetch(dispatch, renderProps) {
-      return dispatch((0, _indexAction.searchArticleAsync)(this.fetchData, renderProps.params.category));
+      return dispatch((0, _indexAction.searchArticleAsync)(this.fetchData, renderProps.params.category, renderProps.params.page));
     }
   }, {
     key: 'fetchData',
     value: function fetchData(category) {
-      return (0, _nodeFetch2.default)(_config2.default.blogUrl + '/wp-json/wp/v2/posts?filter[category_name]=' + category, {
+      var page = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+
+      var params = '?context=embed&filter[category_name]=' + category + '&per_page=' + _config2.default.perPage + '&page=' + page;
+      return (0, _nodeFetch2.default)(_config2.default.blogUrl + '/wp-json/wp/v2/posts' + params, {
         method: 'get',
         mode: 'cors'
       }).then(function (res) {
         if (res.status === 200) {
-          return res.json();
+          return [res.json(), res.headers._headers];
         }
         return console.dir(res);
       });
@@ -66502,19 +66535,24 @@ Category.propTypes = {
 
 // Connect to Redux
 function mapStateToProps(state) {
+  console.log(state);
   return {
     index: state.index.index,
     resetList: state.index.resetList,
+    total: Number(state.index.total),
+    totalPages: Number(state.index.totalPages),
+    currentPage: state.index.currentPage,
+    pathname: state.routing.locationBeforeTransitions.pathname,
     routingKey: state.routing.locationBeforeTransitions.key
   };
 }
 function mapDispatchToProps(dispatch) {
   return {
-    handleFetch: function handleFetch(category, callback) {
-      return dispatch((0, _indexAction.searchArticleAsync)(callback, category));
+    handleFetch: function handleFetch(category, callback, page) {
+      return dispatch((0, _indexAction.searchArticleAsync)(callback, category, page));
     },
     handleInit: function handleInit(key) {
-      return [(0, _indexAction.resetList)(), (0, _indexAction.saveRoutingKey)(key)].forEach(function (action) {
+      return [(0, _indexAction.resetList)(), (0, _indexAction.saveRoutingKey)(key)].map(function (action) {
         return dispatch(action);
       });
     }
@@ -66575,7 +66613,15 @@ var Index = function (_React$Component) {
   _createClass(Index, [{
     key: 'componentDidMount',
     value: function componentDidMount() {
-      return [this.props.handleInit(this.props.routingKey), this.props.handleFetch(Index.fetchData)];
+      return [this.props.handleInit(this.props.routingKey), this.props.handleFetch(Index.fetchData, this.props.params.page)];
+    }
+  }, {
+    key: 'componentWillUpdate',
+    value: function componentWillUpdate(nextProps) {
+      if (nextProps.params.page !== '' && nextProps.params.page !== this.props.params.page) {
+        return [this.props.handleInit(this.props.routingKey), this.props.handleFetch(Index.fetchData, nextProps.params.page)];
+      }
+      return false;
     }
   }, {
     key: 'render',
@@ -66584,18 +66630,21 @@ var Index = function (_React$Component) {
     }
   }], [{
     key: 'handleFetch',
-    value: function handleFetch(dispatch) {
-      return dispatch((0, _indexAction.fetchIndexAsync)(this.fetchData));
+    value: function handleFetch(dispatch, renderProps) {
+      return dispatch((0, _indexAction.fetchIndexAsync)(this.fetchData, renderProps.params.page));
     }
   }, {
     key: 'fetchData',
     value: function fetchData() {
-      return (0, _nodeFetch2.default)(_config2.default.blogUrl + '/wp-json/wp/v2/posts', {
+      var page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+
+      var params = '?context=embed&per_page=' + _config2.default.perPage + '&page=' + page;
+      return (0, _nodeFetch2.default)(_config2.default.blogUrl + '/wp-json/wp/v2/posts' + params, {
         method: 'get',
         mode: 'cors'
       }).then(function (res) {
         if (res.status === 200) {
-          return res.json();
+          return [res.json(), res.headers._headers];
         }
         return console.dir(res);
       });
@@ -66616,16 +66665,19 @@ function mapStateToProps(state) {
   return {
     index: state.index.index,
     resetList: state.index.resetList,
+    total: Number(state.index.total),
+    totalPages: Number(state.index.totalPages),
+    currentPage: state.index.currentPage,
     routingKey: state.routing.locationBeforeTransitions.key
   };
 }
 function mapDispatchToProps(dispatch) {
   return {
-    handleFetch: function handleFetch(callback) {
-      return dispatch((0, _indexAction.fetchIndexAsync)(callback));
+    handleFetch: function handleFetch(callback, page) {
+      return dispatch((0, _indexAction.fetchIndexAsync)(callback, page));
     },
     handleInit: function handleInit(key) {
-      return [(0, _indexAction.resetList)(), (0, _indexAction.saveRoutingKey)(key)].forEach(function (action) {
+      return [(0, _indexAction.resetList)(), (0, _indexAction.saveRoutingKey)(key)].map(function (action) {
         return dispatch(action);
       });
     }
@@ -66723,7 +66775,7 @@ function mapDispatchToProps(dispatch) {
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Root);
 
-},{"../actions/indexAction":356,"../views/root/Footer.jsx":374,"../views/root/Header.jsx":375,"../views/root/Sidebar.jsx":377,"react":315,"react-redux":248}],362:[function(require,module,exports){
+},{"../actions/indexAction":356,"../views/root/Footer.jsx":375,"../views/root/Header.jsx":376,"../views/root/Sidebar.jsx":378,"react":315,"react-redux":248}],362:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66775,13 +66827,17 @@ var Search = function (_React$Component) {
   _createClass(Search, [{
     key: 'componentDidMount',
     value: function componentDidMount() {
-      return [this.props.handleInit(this.props.routingKey), this.props.handleFetch(this.props.params.keyword, Search.fetchData)];
+      return [this.props.handleInit(this.props.routingKey), this.props.handleFetch(this.props.params.keyword, Search.fetchData, this.props.params.page)];
     }
   }, {
     key: 'componentWillUpdate',
     value: function componentWillUpdate(nextProps) {
+      console.log(nextProps);
       if (nextProps.keyword !== '' && nextProps.keyword !== this.props.params.keyword) {
-        return this.props.handleFetch(nextProps.keyword, Search.fetchData);
+        return this.props.handleFetch(nextProps.keyword, Search.fetchData, this.props.params.page);
+      }
+      if (nextProps.params.page !== '' && nextProps.params.page !== this.props.params.page) {
+        return [this.props.handleFetch(this.props.params.keyword, Search.fetchData, nextProps.params.page)];
       }
       return false;
     }
@@ -66798,17 +66854,20 @@ var Search = function (_React$Component) {
   }], [{
     key: 'handleFetch',
     value: function handleFetch(dispatch, renderProps) {
-      return dispatch((0, _indexAction.searchArticleAsync)(this.fetchData, renderProps.params.keyword));
+      return dispatch((0, _indexAction.searchArticleAsync)(this.fetchData, renderProps.params.keyword, renderProps.params.page));
     }
   }, {
     key: 'fetchData',
     value: function fetchData(keyword) {
-      return (0, _nodeFetch2.default)(_config2.default.blogUrl + '/wp-json/wp/v2/posts?filter[s]=' + keyword, {
+      var page = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+
+      var params = '?context=embed&filter[s]=' + keyword + '&per_page=' + _config2.default.perPage + '&page=' + page;
+      return (0, _nodeFetch2.default)(_config2.default.blogUrl + '/wp-json/wp/v2/posts' + params, {
         method: 'get',
         mode: 'cors'
       }).then(function (res) {
         if (res.status === 200) {
-          return res.json();
+          return [res.json(), res.headers._headers];
         }
         return console.dir(res);
       });
@@ -66832,16 +66891,19 @@ function mapStateToProps(state) {
     index: state.index.index,
     keyword: state.root.searchValue,
     resetList: state.index.resetList,
+    total: Number(state.index.total),
+    totalPages: Number(state.index.totalPages),
+    currentPage: state.index.currentPage,
     routingKey: state.routing.locationBeforeTransitions.key
   };
 }
 function mapDispatchToProps(dispatch) {
   return {
-    handleFetch: function handleFetch(keyword, callback) {
-      return dispatch((0, _indexAction.searchArticleAsync)(callback, keyword));
+    handleFetch: function handleFetch(keyword, callback, page) {
+      return dispatch((0, _indexAction.searchArticleAsync)(callback, keyword, page));
     },
     handleInit: function handleInit(key) {
-      return [(0, _indexAction.resetList)(), (0, _indexAction.saveRoutingKey)(key)].forEach(function (action) {
+      return [(0, _indexAction.resetList)(), (0, _indexAction.saveRoutingKey)(key)].map(function (action) {
         return dispatch(action);
       });
     }
@@ -66902,7 +66964,15 @@ var Tag = function (_React$Component) {
   _createClass(Tag, [{
     key: 'componentDidMount',
     value: function componentDidMount() {
-      return [this.props.handleInit(this.props.routingKey), this.props.handleFetch(this.props.params.tag, Tag.fetchData)];
+      return [this.props.handleInit(this.props.routingKey), this.props.handleFetch(this.props.params.tag, Tag.fetchData, this.props.params.page)];
+    }
+  }, {
+    key: 'componentWillUpdate',
+    value: function componentWillUpdate(nextProps) {
+      if (nextProps.params.page !== '' && nextProps.params.page !== this.props.params.page) {
+        return [this.props.handleFetch(this.props.params.tag, Tag.fetchData, nextProps.params.page)];
+      }
+      return false;
     }
   }, {
     key: 'render',
@@ -66912,17 +66982,20 @@ var Tag = function (_React$Component) {
   }], [{
     key: 'handleFetch',
     value: function handleFetch(dispatch, renderProps) {
-      return dispatch((0, _indexAction.searchArticleAsync)(this.fetchData, renderProps.params.tag));
+      return dispatch((0, _indexAction.searchArticleAsync)(this.fetchData, renderProps.params.tag, renderProps.params.page));
     }
   }, {
     key: 'fetchData',
     value: function fetchData(tag) {
-      return (0, _nodeFetch2.default)(_config2.default.blogUrl + '/wp-json/wp/v2/posts?filter[tag]=' + tag, {
+      var page = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+
+      var params = '?context=embed&filter[tag]=' + tag + '&per_page=' + _config2.default.perPage + '&page=' + page;
+      return (0, _nodeFetch2.default)(_config2.default.blogUrl + '/wp-json/wp/v2/posts' + params, {
         method: 'get',
         mode: 'cors'
       }).then(function (res) {
         if (res.status === 200) {
-          return res.json();
+          return [res.json(), res.headers._headers];
         }
         return console.dir(res);
       });
@@ -66943,16 +67016,19 @@ function mapStateToProps(state) {
   return {
     index: state.index.index,
     resetList: state.index.resetList,
+    total: Number(state.index.total),
+    totalPages: Number(state.index.totalPages),
+    currentPage: state.index.currentPage,
     routingKey: state.routing.locationBeforeTransitions.key
   };
 }
 function mapDispatchToProps(dispatch) {
   return {
-    handleFetch: function handleFetch(tag, callback) {
-      return dispatch((0, _indexAction.searchArticleAsync)(callback, tag));
+    handleFetch: function handleFetch(tag, callback, page) {
+      return dispatch((0, _indexAction.searchArticleAsync)(callback, tag, page));
     },
     handleInit: function handleInit(key) {
-      return [(0, _indexAction.resetList)(), (0, _indexAction.saveRoutingKey)(key)].forEach(function (action) {
+      return [(0, _indexAction.resetList)(), (0, _indexAction.saveRoutingKey)(key)].map(function (action) {
         return dispatch(action);
       });
     }
@@ -67020,6 +67096,15 @@ var indexReducer = exports.indexReducer = function indexReducer() {
       return Object.assign({}, state, {
         index: action.payload,
         resetList: false
+      });
+    case _indexAction.SET_PAGINATION:
+      return Object.assign({}, state, {
+        total: action.payload['x-wp-total'][0],
+        totalPages: action.payload['x-wp-totalpages'][0]
+      });
+    case _indexAction.SET_CURRENT_PAGE_NUMBER:
+      return Object.assign({}, state, {
+        currentPage: action.payload
       });
     case _indexAction.FETCH_CATEGORY:
       return Object.assign({}, state, {
@@ -67106,11 +67191,15 @@ var routes = exports.routes = _react2.default.createElement(
   _reactRouter.Route,
   { path: '/', component: _Root2.default },
   _react2.default.createElement(_reactRouter.IndexRoute, { component: _Index2.default }),
+  _react2.default.createElement(_reactRouter.Route, { path: '/:page', component: _Index2.default }),
   _react2.default.createElement(_reactRouter.Route, { path: '/archive/:id', component: _Archive2.default }),
   _react2.default.createElement(_reactRouter.Route, { path: '/search/', component: _Search2.default }),
   _react2.default.createElement(_reactRouter.Route, { path: '/search/:keyword', component: _Search2.default }),
+  _react2.default.createElement(_reactRouter.Route, { path: '/search/:keyword/:page', component: _Search2.default }),
   _react2.default.createElement(_reactRouter.Route, { path: '/category/:category', component: _Category2.default }),
-  _react2.default.createElement(_reactRouter.Route, { path: '/tag/:tag', component: _Tag2.default })
+  _react2.default.createElement(_reactRouter.Route, { path: '/category/:category/:page', component: _Category2.default }),
+  _react2.default.createElement(_reactRouter.Route, { path: '/tag/:tag', component: _Tag2.default }),
+  _react2.default.createElement(_reactRouter.Route, { path: '/tag/:tag/:page', component: _Tag2.default })
 );
 
 },{"./containers/Archive.jsx":358,"./containers/Category.jsx":359,"./containers/Index.jsx":360,"./containers/Root.jsx":361,"./containers/Search.jsx":362,"./containers/Tag.jsx":363,"react":315,"react-router":284}],368:[function(require,module,exports){
@@ -67320,6 +67409,10 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRouter = require('react-router');
 
+var _Pagination = require('./Pagination.jsx');
+
+var _Pagination2 = _interopRequireDefault(_Pagination);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var List = function List(props) {
@@ -67346,7 +67439,8 @@ var List = function List(props) {
       'ul',
       null,
       list
-    )
+    ),
+    _react2.default.createElement(_Pagination2.default, props)
   );
 };
 List.propTypes = {
@@ -67357,7 +67451,120 @@ List.propTypes = {
 
 exports.default = List;
 
-},{"react":315,"react-router":284}],374:[function(require,module,exports){
+},{"./Pagination.jsx":374,"react":315,"react-router":284}],374:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRouter = require('react-router');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var Pagination = function Pagination(props) {
+  var totalPages = Number(props.totalPages);
+  var paramsPage = Number(props.params.page) || 1;
+  var pager = new Array(5).fill(paramsPage);
+
+  var pagination = pager.map(function (page, i) {
+    var number = page > totalPages - 5 + 1 ? totalPages - 5 + 1 - page + i : i;
+    if (page + number > totalPages) {
+      return false;
+    }
+    if (page + number === paramsPage) {
+      return _react2.default.createElement(
+        'li',
+        { className: 'pagination__link_active', key: page + number },
+        page + number
+      );
+    }
+    return _react2.default.createElement(
+      'li',
+      { key: page + number },
+      _react2.default.createElement(
+        _reactRouter.Link,
+        { to: '' + (page + number) },
+        page + number
+      )
+    );
+  });
+  var prev = function prev() {
+    if (paramsPage === 1) {
+      return _react2.default.createElement(
+        'li',
+        null,
+        '\u524D\u3078'
+      );
+    }
+    if (paramsPage > totalPages - 5) {
+      return _react2.default.createElement(
+        'li',
+        null,
+        _react2.default.createElement(
+          _reactRouter.Link,
+          { to: '' + (totalPages - 5) },
+          '\u524D\u3078'
+        )
+      );
+    }
+    return _react2.default.createElement(
+      'li',
+      null,
+      _react2.default.createElement(
+        _reactRouter.Link,
+        { to: '' + (paramsPage - 1) },
+        '\u524D\u3078'
+      )
+    );
+  };
+  var next = function next() {
+    if (paramsPage >= totalPages) {
+      return _react2.default.createElement(
+        'li',
+        null,
+        '\u6B21\u3078'
+      );
+    }
+    return _react2.default.createElement(
+      'li',
+      null,
+      _react2.default.createElement(
+        _reactRouter.Link,
+        { to: '' + (paramsPage + 1) },
+        '\u6B21\u3078'
+      )
+    );
+  };
+
+  return _react2.default.createElement(
+    'div',
+    { className: 'pagination' },
+    _react2.default.createElement(
+      'ul',
+      null,
+      prev(),
+      pagination,
+      next()
+    )
+  );
+};
+Pagination.defaultProps = {
+  params: {
+    page: 1
+  }
+};
+Pagination.propTypes = {
+  totalPages: _react2.default.PropTypes.number
+};
+
+exports.default = Pagination;
+
+},{"react":315,"react-router":284}],375:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67389,7 +67596,7 @@ var Footer = function Footer(props) {
 
 exports.default = Footer;
 
-},{"../../../config":1,"react":315}],375:[function(require,module,exports){
+},{"../../../config":1,"react":315}],376:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67431,7 +67638,7 @@ var Header = function Header(props) {
 
 exports.default = Header;
 
-},{"../../../config":1,"./SearchForm.jsx":376,"react":315,"react-router":284}],376:[function(require,module,exports){
+},{"../../../config":1,"./SearchForm.jsx":377,"react":315,"react-router":284}],377:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -67470,7 +67677,7 @@ var SearchForm = function SearchForm(props) {
 
 exports.default = SearchForm;
 
-},{"react":315}],377:[function(require,module,exports){
+},{"react":315}],378:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {

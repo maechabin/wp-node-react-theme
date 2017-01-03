@@ -9,16 +9,19 @@ import List from '../views/index/List.jsx';
 
 class Category extends React.Component {
   static handleFetch(dispatch, renderProps) {
-    return dispatch(searchArticleAsync(this.fetchData, renderProps.params.category));
+    return dispatch(
+      searchArticleAsync(this.fetchData, renderProps.params.category, renderProps.params.page),
+    );
   }
 
-  static fetchData(category) {
-    return fetch(`${config.blogUrl}/wp-json/wp/v2/posts?filter[category_name]=${category}`, {
+  static fetchData(category, page = 1) {
+    const params = `?context=embed&filter[category_name]=${category}&per_page=${config.perPage}&page=${page}`;
+    return fetch(`${config.blogUrl}/wp-json/wp/v2/posts${params}`, {
       method: 'get',
       mode: 'cors',
     }).then((res) => {
       if (res.status === 200) {
-        return res.json();
+        return [res.json(), res.headers._headers];
       }
       return console.dir(res);
     });
@@ -27,8 +30,24 @@ class Category extends React.Component {
   componentDidMount() {
     return [
       this.props.handleInit(this.props.routingKey),
-      this.props.handleFetch(this.props.params.category, Category.fetchData),
+      this.props.handleFetch(
+        this.props.params.category,
+        Category.fetchData,
+        this.props.params.page,
+      ),
     ];
+  }
+
+  componentWillUpdate(nextProps) {
+    if (nextProps.params.page !== '' && nextProps.params.page !== this.props.params.page) {
+      return [
+        this.props.handleFetch(
+          this.props.params.category,
+          Category.fetchData,
+          nextProps.params.page),
+      ];
+    }
+    return false;
   }
 
   render() {
@@ -46,19 +65,24 @@ Category.propTypes = {
 
 // Connect to Redux
 function mapStateToProps(state) {
+  console.log(state);
   return {
     index: state.index.index,
     resetList: state.index.resetList,
+    total: Number(state.index.total),
+    totalPages: Number(state.index.totalPages),
+    currentPage: state.index.currentPage,
+    pathname: state.routing.locationBeforeTransitions.pathname,
     routingKey: state.routing.locationBeforeTransitions.key,
   };
 }
 function mapDispatchToProps(dispatch) {
   return {
-    handleFetch(category, callback) {
-      return dispatch(searchArticleAsync(callback, category));
+    handleFetch(category, callback, page) {
+      return dispatch(searchArticleAsync(callback, category, page));
     },
     handleInit(key) {
-      return [resetList(), saveRoutingKey(key)].forEach(
+      return [resetList(), saveRoutingKey(key)].map(
         action => dispatch(action),
       );
     },
