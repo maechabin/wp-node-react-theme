@@ -67471,9 +67471,25 @@ var Pagination = function Pagination(props) {
   var paramsPage = Number(props.params.page) || 1;
   var pager = new Array(5).fill(paramsPage);
 
+  console.log(props);
+  var pathname = props.location.pathname.split('/');
+
+  var path = function path(pathname, routeParams) {
+    switch (pathname) {
+      case 'search':
+        return '/search/' + routeParams.keyword + '/';
+      case 'category':
+        return '/category/' + routeParams.category + '/';
+      case 'tag':
+        return '/tag/' + routeParams.tag + '/';
+      default:
+        return '/';
+    }
+  };
+
   var pagination = pager.map(function (page, i) {
     var number = page > totalPages - 5 + 1 ? totalPages - 5 + 1 - page + i : i;
-    if (page + number > totalPages) {
+    if (page + number > totalPages || page + number < 1) {
       return false;
     }
     if (page + number === paramsPage) {
@@ -67488,7 +67504,7 @@ var Pagination = function Pagination(props) {
       { key: page + number },
       _react2.default.createElement(
         _reactRouter.Link,
-        { to: '' + (page + number) },
+        { to: '' + path(pathname[1], props.routeParams) + (page + number) },
         page + number
       )
     );
@@ -67507,7 +67523,7 @@ var Pagination = function Pagination(props) {
         null,
         _react2.default.createElement(
           _reactRouter.Link,
-          { to: '' + (totalPages - 5) },
+          { to: '' + path(pathname[1], props.routeParams) + (totalPages - 5) },
           '\u524D\u3078'
         )
       );
@@ -67517,7 +67533,7 @@ var Pagination = function Pagination(props) {
       null,
       _react2.default.createElement(
         _reactRouter.Link,
-        { to: '' + (paramsPage - 1) },
+        { to: '' + path(pathname[1], props.routeParams) + (paramsPage - 1) },
         '\u524D\u3078'
       )
     );
@@ -67535,7 +67551,7 @@ var Pagination = function Pagination(props) {
       null,
       _react2.default.createElement(
         _reactRouter.Link,
-        { to: '' + (paramsPage + 1) },
+        { to: '' + path(pathname[1], props.routeParams) + (paramsPage + 1) },
         '\u6B21\u3078'
       )
     );
