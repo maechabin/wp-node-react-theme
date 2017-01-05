@@ -15,6 +15,7 @@
     "express": "^4.14.0",
     "lodash": "^4.17.3",
     "node-fetch": "^1.6.3",
+    "object.values": "^1.0.4",
     "react": "^15.3.2",
     "react-dom": "^15.3.2",
     "react-redux": "^4.4.6",
