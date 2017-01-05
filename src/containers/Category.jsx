@@ -65,7 +65,6 @@ Category.propTypes = {
 
 // Connect to Redux
 function mapStateToProps(state) {
-  console.log(state);
   return {
     index: state.index.index,
     resetList: state.index.resetList,
