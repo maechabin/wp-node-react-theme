@@ -96,6 +96,7 @@ function renderFullPage(html, finalState) {
       <head>
         <meta charset="utf-8">
         <title>${config.blogTitleTag}</title>
+        <link rel="stylesheet" href="/assets/style.css">
       </head>
 
       <body>

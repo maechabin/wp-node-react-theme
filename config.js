@@ -1,6 +1,6 @@
 export default {
   blogTitle: 'LifeGadget',
   blogTitleTag: 'LifeGadget（ライフガジェット）',
-  blogUrl: 'http://localhost:8888',
+  blogUrl: 'http://localhost:8080/wordpress',
   perPage: 20,
 };

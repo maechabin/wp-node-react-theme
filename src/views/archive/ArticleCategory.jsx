@@ -6,13 +6,15 @@ const ArticleCategory = (props) => {
   const getCategory = categoryList => id => categoryList.map(
     (category, i) => (category.id === id ? i : null),
   );
-  const getCategoryName = getCategory(props.category);
+  const getCategoryId = getCategory(props.category);
   const category = _.isEmpty(props.article.categories) ? '' : props.article.categories.map(
     (id) => {
-      const CategoryId = getCategoryName(id).find(i => i != null);
+      const categoryId = getCategoryId(id).find(i => i != null);
       return (
         <span key={id}>
-          <Link to={`/category/${props.category[CategoryId].slug}`}>{props.category[CategoryId].name}</Link>
+          <Link to={`/category/${props.category[categoryId].slug}`}>
+            {props.category[categoryId].name}
+          </Link>
         </span>
       );
     },

@@ -5,7 +5,7 @@ import { searchArticleAsync, resetList, saveRoutingKey } from '../actions/indexA
 import config from '../../config';
 
 // view files
-import List from '../views/index/List.jsx';
+import IndexComp from '../views/index/IndexComp.jsx';
 
 class Tag extends React.Component {
   static handleFetch(dispatch, renderProps) {
@@ -48,7 +48,7 @@ class Tag extends React.Component {
 
   render() {
     return (
-      <List {...this.props} />
+      <IndexComp {...this.props} />
     );
   }
 }

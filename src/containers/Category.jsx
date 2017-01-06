@@ -5,7 +5,7 @@ import { searchArticleAsync, resetList, saveRoutingKey } from '../actions/indexA
 import config from '../../config';
 
 // view files
-import List from '../views/index/List.jsx';
+import IndexComp from '../views/index/IndexComp.jsx';
 
 class Category extends React.Component {
   static handleFetch(dispatch, renderProps) {
@@ -52,13 +52,13 @@ class Category extends React.Component {
 
   render() {
     return (
-      <List {...this.props} />
+      <IndexComp {...this.props} />
     );
   }
 }
 Category.propTypes = {
   routingKey: React.PropTypes.string,
-  category: React.PropTypes.string,
+  category: React.PropTypes.arrayOf(React.PropTypes.object),
   handleInit: React.PropTypes.func,
   handleFetch: React.PropTypes.func,
 };
@@ -67,6 +67,7 @@ Category.propTypes = {
 function mapStateToProps(state) {
   return {
     index: state.index.index,
+    category: state.index.category,
     resetList: state.index.resetList,
     total: Number(state.index.total),
     totalPages: Number(state.index.totalPages),

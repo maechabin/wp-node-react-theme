@@ -1,11 +1,11 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import fetch from 'node-fetch';
-import { fetchIndexAsync, resetList, saveRoutingKey } from '../actions/indexAction';
+import { fetchIndexAsync, resetList, saveRoutingKey, saveMediaAsync } from '../actions/indexAction';
 import config from '../../config';
 
 // view files
-import List from '../views/index/List.jsx';
+import IndexComp from '../views/index/IndexComp.jsx';
 
 class Index extends React.Component {
   static handleFetch(dispatch, renderProps) {
@@ -44,7 +44,7 @@ class Index extends React.Component {
 
   render() {
     return (
-      <List {...this.props} />
+      <IndexComp {...this.props} />
     );
   }
 }
@@ -74,6 +74,9 @@ function mapDispatchToProps(dispatch) {
       return [resetList(), saveRoutingKey(key)].map(
         action => dispatch(action),
       );
+    },
+    getEyeCatchImage(id) {
+      return dispatch(saveMediaAsync(id));
     },
   };
 }

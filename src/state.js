@@ -11,6 +11,7 @@ export const indexState = {
   total: 0,
   totalPages: 1,
   currentPage: 1,
+  media: [],
 };
 export const archiveState = {
   article: {},

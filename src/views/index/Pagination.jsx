@@ -6,7 +6,6 @@ const Pagination = (props) => {
   const paramsPage = Number(props.params.page) || 1;
   const pager = new Array(5).fill(paramsPage);
 
-  console.log(props);
   const pathname = props.location.pathname.split('/');
 
   const path = (pathname, routeParams) => {
@@ -51,15 +50,16 @@ const Pagination = (props) => {
     }
     return <li><Link to={`${path(pathname[1], props.routeParams)}${paramsPage + 1}`}>次へ</Link></li>;
   };
+  const pagenationAll = (props.resetList && props.routingKey !== '') ? '' : (
+    <ul>
+      {prev()}
+      {pagination}
+      {next()}
+    </ul>
+  );
 
   return (
-    <div className="pagination">
-      <ul>
-        {prev()}
-        {pagination}
-        {next()}
-      </ul>
-    </div>
+    <div className="pagination">{pagenationAll}</div>
   );
 };
 Pagination.defaultProps = {

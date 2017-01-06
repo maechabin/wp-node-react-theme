@@ -16,6 +16,28 @@ export function saveRoutingKey(payload) {
   };
 }
 
+// 任意のIDのアイキャッチ画像の取得、保存
+export const SAVE_MEDIA = 'SAVE_MEDIA';
+export function saveMedia(payload) {
+  return {
+    type: SAVE_MEDIA,
+    payload,
+  }
+}
+export function saveMediaAsync(id) {
+  return (dispatch) => {
+    return fetch(`${config.blogUrl}/wp-json/wp/v2/media/${id}`, {
+      method: 'get',
+      mode: 'cors',
+    }).then((res) => {
+      if (res.status === 200) {
+        return res.json();
+      }
+      return console.dir(res);
+    }).then(res => console.log(res));
+  }
+}
+
 export const FETCH_CATEGORY = 'FETCH_CATEGORY';
 export function fetchCategory(payload) {
   return {
