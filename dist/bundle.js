@@ -7,7 +7,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = {
   blogTitle: 'LifeGadget',
   blogTitleTag: 'LifeGadget（ライフガジェット）',
-  blogUrl: 'http://localhost:8080/wordpress',
+  blogUrl: 'http://localhost:8888',
   perPage: 20
 };
 
@@ -4667,12 +4667,18 @@ module.exports = hyphenateStyleName;
  * will remain to ensure logic does not differ in production.
  */
 
-function invariant(condition, format, a, b, c, d, e, f) {
-  if (process.env.NODE_ENV !== 'production') {
+var validateFormat = function validateFormat(format) {};
+
+if (process.env.NODE_ENV !== 'production') {
+  validateFormat = function validateFormat(format) {
     if (format === undefined) {
       throw new Error('invariant requires an error message argument');
     }
-  }
+  };
+}
+
+function invariant(condition, format, a, b, c, d, e, f) {
+  validateFormat(format);
 
   if (!condition) {
     var error;
@@ -7146,7 +7152,6 @@ module.exports = {
     //
     // Overall, it seems that it's a mess :( http://www8.plala.or.jp/tkubota1/unicode-symbols-map2.html
 
-
     'shiftjis': {
         type: '_dbcs',
         table: function() { return require('./tables/shiftjis.json') },
@@ -7157,8 +7162,10 @@ module.exports = {
     'mskanji': 'shiftjis',
     'sjis': 'shiftjis',
     'windows31j': 'shiftjis',
+    'ms31j': 'shiftjis',
     'xsjis': 'shiftjis',
     'windows932': 'shiftjis',
+    'ms932': 'shiftjis',
     '932': 'shiftjis',
     'cp932': 'shiftjis',
 
@@ -7172,8 +7179,10 @@ module.exports = {
     // TODO: IBM CCSID 942 = CP932, but F0-F9 custom chars and other char changes.
     // TODO: IBM CCSID 943 = Shift_JIS = CP932 with original Shift_JIS lower 128 chars.
 
+
     // == Chinese/GBK ==========================================================
     // http://en.wikipedia.org/wiki/GBK
+    // We mostly implement W3C recommendation: https://www.w3.org/TR/encoding/#gbk-encoder
 
     // Oldest GB2312 (1981, ~7600 chars) is a subset of CP936
     'gb2312': 'cp936',
@@ -7182,11 +7191,10 @@ module.exports = {
     'csgb2312': 'cp936',
     'csiso58gb231280': 'cp936',
     'euccn': 'cp936',
-    'isoir58': 'gbk',
 
     // Microsoft's CP936 is a subset and approximation of GBK.
-    // TODO: Euro = 0x80 in cp936, but not in GBK (where it's valid but undefined)
     'windows936': 'cp936',
+    'ms936': 'cp936',
     '936': 'cp936',
     'cp936': {
         type: '_dbcs',
@@ -7199,24 +7207,28 @@ module.exports = {
         table: function() { return require('./tables/cp936.json').concat(require('./tables/gbk-added.json')) },
     },
     'xgbk': 'gbk',
+    'isoir58': 'gbk',
 
     // GB18030 is an algorithmic extension of GBK.
+    // Main source: https://www.w3.org/TR/encoding/#gbk-encoder
+    // http://icu-project.org/docs/papers/gb18030.html
+    // http://source.icu-project.org/repos/icu/data/trunk/charset/data/xml/gb-18030-2000.xml
+    // http://www.khngai.com/chinese/charmap/tblgbk.php?page=0
     'gb18030': {
         type: '_dbcs',
         table: function() { return require('./tables/cp936.json').concat(require('./tables/gbk-added.json')) },
         gb18030: function() { return require('./tables/gb18030-ranges.json') },
+        encodeSkipVals: [0x80],
+        encodeAdd: {'€': 0xA2E3},
     },
 
     'chinese': 'gb18030',
 
-    // TODO: Support GB18030 (~27000 chars + whole unicode mapping, cp54936)
-    // http://icu-project.org/docs/papers/gb18030.html
-    // http://source.icu-project.org/repos/icu/data/trunk/charset/data/xml/gb-18030-2000.xml
-    // http://www.khngai.com/chinese/charmap/tblgbk.php?page=0
 
     // == Korean ===============================================================
     // EUC-KR, KS_C_5601 and KS X 1001 are exactly the same.
     'windows949': 'cp949',
+    'ms949': 'cp949',
     '949': 'cp949',
     'cp949': {
         type: '_dbcs',
@@ -7257,6 +7269,7 @@ module.exports = {
     // Unicode mapping (http://www.unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/OTHER/BIG5.TXT) is said to be wrong.
 
     'windows950': 'cp950',
+    'ms950': 'cp950',
     '950': 'cp950',
     'cp950': {
         type: '_dbcs',
@@ -7274,7 +7287,6 @@ module.exports = {
     'cnbig5': 'big5hkscs',
     'csbig5': 'big5hkscs',
     'xxbig5': 'big5hkscs',
-
 };
 
 },{"./tables/big5-added.json":63,"./tables/cp936.json":64,"./tables/cp949.json":65,"./tables/cp950.json":66,"./tables/eucjp.json":67,"./tables/gb18030-ranges.json":68,"./tables/gbk-added.json":69,"./tables/shiftjis.json":70}],58:[function(require,module,exports){
@@ -9409,6 +9421,8 @@ module.exports=[
 (function (Buffer){
 "use strict"
 
+// Note: UTF16-LE (or UCS2) codec is Node.js native. See encodings/internal.js
+
 // == UTF16-BE codec. ==========================================================
 
 exports.utf16be = Utf16BECodec;
@@ -10667,8 +10681,7 @@ function baseGetTag(value) {
   if (value == null) {
     return value === undefined ? undefinedTag : nullTag;
   }
-  value = Object(value);
-  return (symToStringTag && symToStringTag in value)
+  return (symToStringTag && symToStringTag in Object(value))
     ? getRawTag(value)
     : objectToString(value);
 }
@@ -10902,7 +10915,7 @@ module.exports = isPlainObject;
   var undefined;
 
   /** Used as the semantic version number. */
-  var VERSION = '4.17.2';
+  var VERSION = '4.17.3';
 
   /** Used as the size to enable large array optimizations. */
   var LARGE_ARRAY_SIZE = 200;
@@ -12457,9 +12470,9 @@ module.exports = isPlainObject;
      * Shortcut fusion is an optimization to merge iteratee calls; this avoids
      * the creation of intermediate arrays and can greatly reduce the number of
      * iteratee executions. Sections of a chain sequence qualify for shortcut
-     * fusion if the section is applied to an array of at least `200` elements
-     * and any iteratees accept only one argument. The heuristic for whether a
-     * section qualifies for shortcut fusion is subject to change.
+     * fusion if the section is applied to an array and iteratees accept only
+     * one argument. The heuristic for whether a section qualifies for shortcut
+     * fusion is subject to change.
      *
      * Chaining is supported in custom builds as long as the `_#value` method is
      * directly or indirectly included in the build.
@@ -12618,8 +12631,8 @@ module.exports = isPlainObject;
 
     /**
      * By default, the template delimiters used by lodash are like those in
-     * embedded Ruby (ERB). Change the following template settings to use
-     * alternative delimiters.
+     * embedded Ruby (ERB) as well as ES2015 template strings. Change the
+     * following template settings to use alternative delimiters.
      *
      * @static
      * @memberOf _
@@ -12766,8 +12779,7 @@ module.exports = isPlainObject;
           resIndex = 0,
           takeCount = nativeMin(length, this.__takeCount__);
 
-      if (!isArr || arrLength < LARGE_ARRAY_SIZE ||
-          (arrLength == length && takeCount == length)) {
+      if (!isArr || (!isRight && arrLength == length && takeCount == length)) {
         return baseWrapperValue(array, this.__actions__);
       }
       var result = [];
@@ -12881,7 +12893,7 @@ module.exports = isPlainObject;
      */
     function hashHas(key) {
       var data = this.__data__;
-      return nativeCreate ? data[key] !== undefined : hasOwnProperty.call(data, key);
+      return nativeCreate ? (data[key] !== undefined) : hasOwnProperty.call(data, key);
     }
 
     /**
@@ -13352,24 +13364,6 @@ module.exports = isPlainObject;
      */
     function arrayShuffle(array) {
       return shuffleSelf(copyArray(array));
-    }
-
-    /**
-     * Used by `_.defaults` to customize its `_.assignIn` use.
-     *
-     * @private
-     * @param {*} objValue The destination value.
-     * @param {*} srcValue The source value.
-     * @param {string} key The key of the property to assign.
-     * @param {Object} object The parent object of `objValue`.
-     * @returns {*} Returns the value to assign.
-     */
-    function assignInDefaults(objValue, srcValue, key, object) {
-      if (objValue === undefined ||
-          (eq(objValue, objectProto[key]) && !hasOwnProperty.call(object, key))) {
-        return srcValue;
-      }
-      return objValue;
     }
 
     /**
@@ -13984,8 +13978,7 @@ module.exports = isPlainObject;
       if (value == null) {
         return value === undefined ? undefinedTag : nullTag;
       }
-      value = Object(value);
-      return (symToStringTag && symToStringTag in value)
+      return (symToStringTag && symToStringTag in Object(value))
         ? getRawTag(value)
         : objectToString(value);
     }
@@ -14189,7 +14182,7 @@ module.exports = isPlainObject;
       if (value === other) {
         return true;
       }
-      if (value == null || other == null || (!isObject(value) && !isObjectLike(other))) {
+      if (value == null || other == null || (!isObjectLike(value) && !isObjectLike(other))) {
         return value !== value && other !== other;
       }
       return baseIsEqualDeep(value, other, bitmask, customizer, baseIsEqual, stack);
@@ -14212,17 +14205,12 @@ module.exports = isPlainObject;
     function baseIsEqualDeep(object, other, bitmask, customizer, equalFunc, stack) {
       var objIsArr = isArray(object),
           othIsArr = isArray(other),
-          objTag = arrayTag,
-          othTag = arrayTag;
+          objTag = objIsArr ? arrayTag : getTag(object),
+          othTag = othIsArr ? arrayTag : getTag(other);
 
-      if (!objIsArr) {
-        objTag = getTag(object);
-        objTag = objTag == argsTag ? objectTag : objTag;
-      }
-      if (!othIsArr) {
-        othTag = getTag(other);
-        othTag = othTag == argsTag ? objectTag : othTag;
-      }
+      objTag = objTag == argsTag ? objectTag : objTag;
+      othTag = othTag == argsTag ? objectTag : othTag;
+
       var objIsObj = objTag == objectTag,
           othIsObj = othTag == objectTag,
           isSameTag = objTag == othTag;
@@ -14670,7 +14658,6 @@ module.exports = isPlainObject;
      * @returns {Object} Returns the new object.
      */
     function basePick(object, paths) {
-      object = Object(object);
       return basePickBy(object, paths, function(value, path) {
         return hasIn(object, path);
       });
@@ -16063,8 +16050,7 @@ module.exports = isPlainObject;
           var args = arguments,
               value = args[0];
 
-          if (wrapper && args.length == 1 &&
-              isArray(value) && value.length >= LARGE_ARRAY_SIZE) {
+          if (wrapper && args.length == 1 && isArray(value)) {
             return wrapper.plant(value).value();
           }
           var index = 0,
@@ -16371,7 +16357,7 @@ module.exports = isPlainObject;
       var func = Math[methodName];
       return function(number, precision) {
         number = toNumber(number);
-        precision = nativeMin(toInteger(precision), 292);
+        precision = precision == null ? 0 : nativeMin(toInteger(precision), 292);
         if (precision) {
           // Shift with exponential notation to avoid floating-point issues.
           // See [MDN](https://mdn.io/round#Examples) for more details.
@@ -16476,7 +16462,7 @@ module.exports = isPlainObject;
       thisArg = newData[2];
       partials = newData[3];
       holders = newData[4];
-      arity = newData[9] = newData[9] == null
+      arity = newData[9] = newData[9] === undefined
         ? (isBindKey ? 0 : func.length)
         : nativeMax(newData[9] - length, 0);
 
@@ -16494,6 +16480,63 @@ module.exports = isPlainObject;
       }
       var setter = data ? baseSetData : setData;
       return setWrapToString(setter(result, newData), func, bitmask);
+    }
+
+    /**
+     * Used by `_.defaults` to customize its `_.assignIn` use to assign properties
+     * of source objects to the destination object for all destination properties
+     * that resolve to `undefined`.
+     *
+     * @private
+     * @param {*} objValue The destination value.
+     * @param {*} srcValue The source value.
+     * @param {string} key The key of the property to assign.
+     * @param {Object} object The parent object of `objValue`.
+     * @returns {*} Returns the value to assign.
+     */
+    function customDefaultsAssignIn(objValue, srcValue, key, object) {
+      if (objValue === undefined ||
+          (eq(objValue, objectProto[key]) && !hasOwnProperty.call(object, key))) {
+        return srcValue;
+      }
+      return objValue;
+    }
+
+    /**
+     * Used by `_.defaultsDeep` to customize its `_.merge` use to merge source
+     * objects into destination objects that are passed thru.
+     *
+     * @private
+     * @param {*} objValue The destination value.
+     * @param {*} srcValue The source value.
+     * @param {string} key The key of the property to merge.
+     * @param {Object} object The parent object of `objValue`.
+     * @param {Object} source The parent object of `srcValue`.
+     * @param {Object} [stack] Tracks traversed source values and their merged
+     *  counterparts.
+     * @returns {*} Returns the value to assign.
+     */
+    function customDefaultsMerge(objValue, srcValue, key, object, source, stack) {
+      if (isObject(objValue) && isObject(srcValue)) {
+        // Recursively merge objects and arrays (susceptible to call stack limits).
+        stack.set(srcValue, objValue);
+        baseMerge(objValue, srcValue, undefined, customDefaultsMerge, stack);
+        stack['delete'](srcValue);
+      }
+      return objValue;
+    }
+
+    /**
+     * Used by `_.omit` to customize its `_.cloneDeep` use to only clone plain
+     * objects.
+     *
+     * @private
+     * @param {*} value The value to inspect.
+     * @param {string} key The key of the property to inspect.
+     * @returns {*} Returns the uncloned value or `undefined` to defer cloning to `_.cloneDeep`.
+     */
+    function customOmitClone(value, key) {
+      return (key !== undefined && isPlainObject(value)) ? undefined : value;
     }
 
     /**
@@ -16667,9 +16710,9 @@ module.exports = isPlainObject;
      */
     function equalObjects(object, other, bitmask, customizer, equalFunc, stack) {
       var isPartial = bitmask & COMPARE_PARTIAL_FLAG,
-          objProps = keys(object),
+          objProps = getAllKeys(object),
           objLength = objProps.length,
-          othProps = keys(other),
+          othProps = getAllKeys(other),
           othLength = othProps.length;
 
       if (objLength != othLength && !isPartial) {
@@ -16907,7 +16950,15 @@ module.exports = isPlainObject;
      * @param {Object} object The object to query.
      * @returns {Array} Returns the array of symbols.
      */
-    var getSymbols = nativeGetSymbols ? overArg(nativeGetSymbols, Object) : stubArray;
+    var getSymbols = !nativeGetSymbols ? stubArray : function(object) {
+      if (object == null) {
+        return [];
+      }
+      object = Object(object);
+      return arrayFilter(nativeGetSymbols(object), function(symbol) {
+        return propertyIsEnumerable.call(object, symbol);
+      });
+    };
 
     /**
      * Creates an array of the own and inherited enumerable symbols of `object`.
@@ -17391,29 +17442,6 @@ module.exports = isPlainObject;
       data[1] = newBitmask;
 
       return data;
-    }
-
-    /**
-     * Used by `_.defaultsDeep` to customize its `_.merge` use.
-     *
-     * @private
-     * @param {*} objValue The destination value.
-     * @param {*} srcValue The source value.
-     * @param {string} key The key of the property to merge.
-     * @param {Object} object The parent object of `objValue`.
-     * @param {Object} source The parent object of `srcValue`.
-     * @param {Object} [stack] Tracks traversed source values and their merged
-     *  counterparts.
-     * @returns {*} Returns the value to assign.
-     */
-    function mergeDefaults(objValue, srcValue, key, object, source, stack) {
-      if (isObject(objValue) && isObject(srcValue)) {
-        // Recursively merge objects and arrays (susceptible to call stack limits).
-        stack.set(srcValue, objValue);
-        baseMerge(objValue, srcValue, undefined, mergeDefaults, stack);
-        stack['delete'](srcValue);
-      }
-      return objValue;
     }
 
     /**
@@ -19158,7 +19186,7 @@ module.exports = isPlainObject;
      *
      * var users = [
      *   { 'user': 'barney',  'active': false },
-     *   { 'user': 'fred',    'active': false},
+     *   { 'user': 'fred',    'active': false },
      *   { 'user': 'pebbles', 'active': true }
      * ];
      *
@@ -21727,7 +21755,7 @@ module.exports = isPlainObject;
       if (typeof func != 'function') {
         throw new TypeError(FUNC_ERROR_TEXT);
       }
-      start = start === undefined ? 0 : nativeMax(toInteger(start), 0);
+      start = start == null ? 0 : nativeMax(toInteger(start), 0);
       return baseRest(function(args) {
         var array = args[start],
             otherArgs = castSlice(args, 0, start);
@@ -22397,7 +22425,7 @@ module.exports = isPlainObject;
      * date objects, error objects, maps, numbers, `Object` objects, regexes,
      * sets, strings, symbols, and typed arrays. `Object` objects are compared
      * by their own, not inherited, enumerable properties. Functions and DOM
-     * nodes are **not** supported.
+     * nodes are compared by strict equality, i.e. `===`.
      *
      * @static
      * @memberOf _
@@ -23417,7 +23445,9 @@ module.exports = isPlainObject;
      * // => 3
      */
     function toSafeInteger(value) {
-      return baseClamp(toInteger(value), -MAX_SAFE_INTEGER, MAX_SAFE_INTEGER);
+      return value
+        ? baseClamp(toInteger(value), -MAX_SAFE_INTEGER, MAX_SAFE_INTEGER)
+        : (value === 0 ? value : 0);
     }
 
     /**
@@ -23671,7 +23701,7 @@ module.exports = isPlainObject;
      * // => { 'a': 1, 'b': 2 }
      */
     var defaults = baseRest(function(args) {
-      args.push(undefined, assignInDefaults);
+      args.push(undefined, customDefaultsAssignIn);
       return apply(assignInWith, undefined, args);
     });
 
@@ -23695,7 +23725,7 @@ module.exports = isPlainObject;
      * // => { 'a': { 'b': 2, 'c': 3 } }
      */
     var defaultsDeep = baseRest(function(args) {
-      args.push(undefined, mergeDefaults);
+      args.push(undefined, customDefaultsMerge);
       return apply(mergeWith, undefined, args);
     });
 
@@ -24357,7 +24387,7 @@ module.exports = isPlainObject;
       });
       copyObject(object, getAllKeysIn(object), result);
       if (isDeep) {
-        result = baseClone(result, CLONE_DEEP_FLAG | CLONE_FLAT_FLAG | CLONE_SYMBOLS_FLAG);
+        result = baseClone(result, CLONE_DEEP_FLAG | CLONE_FLAT_FLAG | CLONE_SYMBOLS_FLAG, customOmitClone);
       }
       var length = paths.length;
       while (length--) {
@@ -25506,7 +25536,10 @@ module.exports = isPlainObject;
      */
     function startsWith(string, target, position) {
       string = toString(string);
-      position = baseClamp(toInteger(position), 0, string.length);
+      position = position == null
+        ? 0
+        : baseClamp(toInteger(position), 0, string.length);
+
       target = baseToString(target);
       return string.slice(position, position + target.length) == target;
     }
@@ -25625,9 +25658,9 @@ module.exports = isPlainObject;
         options = undefined;
       }
       string = toString(string);
-      options = assignInWith({}, options, settings, assignInDefaults);
+      options = assignInWith({}, options, settings, customDefaultsAssignIn);
 
-      var imports = assignInWith({}, options.imports, settings.imports, assignInDefaults),
+      var imports = assignInWith({}, options.imports, settings.imports, customDefaultsAssignIn),
           importsKeys = keys(imports),
           importsValues = baseValues(imports, importsKeys);
 
@@ -27711,14 +27744,13 @@ module.exports = isPlainObject;
     // Add `LazyWrapper` methods for `_.drop` and `_.take` variants.
     arrayEach(['drop', 'take'], function(methodName, index) {
       LazyWrapper.prototype[methodName] = function(n) {
-        var filtered = this.__filtered__;
-        if (filtered && !index) {
-          return new LazyWrapper(this);
-        }
         n = n === undefined ? 1 : nativeMax(toInteger(n), 0);
 
-        var result = this.clone();
-        if (filtered) {
+        var result = (this.__filtered__ && !index)
+          ? new LazyWrapper(this)
+          : this.clone();
+
+        if (result.__filtered__) {
           result.__takeCount__ = nativeMin(n, result.__takeCount__);
         } else {
           result.__views__.push({
@@ -37814,6 +37846,28 @@ var getDictionaryKey = function (inst) {
   return '.' + inst._rootNodeID;
 };
 
+function isInteractive(tag) {
+  return tag === 'button' || tag === 'input' || tag === 'select' || tag === 'textarea';
+}
+
+function shouldPreventMouseEvent(name, type, props) {
+  switch (name) {
+    case 'onClick':
+    case 'onClickCapture':
+    case 'onDoubleClick':
+    case 'onDoubleClickCapture':
+    case 'onMouseDown':
+    case 'onMouseDownCapture':
+    case 'onMouseMove':
+    case 'onMouseMoveCapture':
+    case 'onMouseUp':
+    case 'onMouseUpCapture':
+      return !!(props.disabled && isInteractive(type));
+    default:
+      return false;
+  }
+}
+
 /**
  * This is a unified interface for event plugins to be installed and configured.
  *
@@ -37882,7 +37936,12 @@ var EventPluginHub = {
    * @return {?function} The stored callback.
    */
   getListener: function (inst, registrationName) {
+    // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
+    // live here; needs to be moved to a better place soon
     var bankForRegistrationName = listenerBank[registrationName];
+    if (shouldPreventMouseEvent(registrationName, inst._currentElement.type, inst._currentElement.props)) {
+      return null;
+    }
     var key = getDictionaryKey(inst);
     return bankForRegistrationName && bankForRegistrationName[key];
   },
@@ -47337,7 +47396,7 @@ module.exports = ReactUpdates;
 
 'use strict';
 
-module.exports = '15.4.0';
+module.exports = '15.4.1';
 },{}],198:[function(require,module,exports){
 /**
  * Copyright 2013-present, Facebook, Inc.
@@ -47915,18 +47974,6 @@ function isInteractive(tag) {
   return tag === 'button' || tag === 'input' || tag === 'select' || tag === 'textarea';
 }
 
-function shouldPreventMouseEvent(inst) {
-  if (inst) {
-    var disabled = inst._currentElement && inst._currentElement.props.disabled;
-
-    if (disabled) {
-      return isInteractive(inst._tag);
-    }
-  }
-
-  return false;
-}
-
 var SimpleEventPlugin = {
 
   eventTypes: eventTypes,
@@ -47997,10 +48044,7 @@ var SimpleEventPlugin = {
       case 'topMouseDown':
       case 'topMouseMove':
       case 'topMouseUp':
-        // Disabled elements should not respond to mouse events
-        if (shouldPreventMouseEvent(targetInst)) {
-          return null;
-        }
+      // TODO: Disabled elements should not respond to mouse events
       /* falls through */
       case 'topMouseOut':
       case 'topMouseOver':
@@ -56385,30 +56429,38 @@ typeof Set === 'function' && isNative(Set) &&
 // Set.prototype.keys
 Set.prototype != null && typeof Set.prototype.keys === 'function' && isNative(Set.prototype.keys);
 
+var setItem;
+var getItem;
+var removeItem;
+var getItemIDs;
+var addRoot;
+var removeRoot;
+var getRootIDs;
+
 if (canUseCollections) {
   var itemMap = new Map();
   var rootIDSet = new Set();
 
-  var setItem = function (id, item) {
+  setItem = function (id, item) {
     itemMap.set(id, item);
   };
-  var getItem = function (id) {
+  getItem = function (id) {
     return itemMap.get(id);
   };
-  var removeItem = function (id) {
+  removeItem = function (id) {
     itemMap['delete'](id);
   };
-  var getItemIDs = function () {
+  getItemIDs = function () {
     return Array.from(itemMap.keys());
   };
 
-  var addRoot = function (id) {
+  addRoot = function (id) {
     rootIDSet.add(id);
   };
-  var removeRoot = function (id) {
+  removeRoot = function (id) {
     rootIDSet['delete'](id);
   };
-  var getRootIDs = function () {
+  getRootIDs = function () {
     return Array.from(rootIDSet.keys());
   };
 } else {
@@ -56424,31 +56476,31 @@ if (canUseCollections) {
     return parseInt(key.substr(1), 10);
   };
 
-  var setItem = function (id, item) {
+  setItem = function (id, item) {
     var key = getKeyFromID(id);
     itemByKey[key] = item;
   };
-  var getItem = function (id) {
+  getItem = function (id) {
     var key = getKeyFromID(id);
     return itemByKey[key];
   };
-  var removeItem = function (id) {
+  removeItem = function (id) {
     var key = getKeyFromID(id);
     delete itemByKey[key];
   };
-  var getItemIDs = function () {
+  getItemIDs = function () {
     return Object.keys(itemByKey).map(getIDFromKey);
   };
 
-  var addRoot = function (id) {
+  addRoot = function (id) {
     var key = getKeyFromID(id);
     rootByKey[key] = true;
   };
-  var removeRoot = function (id) {
+  removeRoot = function (id) {
     var key = getKeyFromID(id);
     delete rootByKey[key];
   };
-  var getRootIDs = function () {
+  getRootIDs = function () {
     return Object.keys(rootByKey).map(getIDFromKey);
   };
 }
@@ -60904,7 +60956,7 @@ function warning(message) {
   /* eslint-enable no-empty */
 }
 },{}],335:[function(require,module,exports){
-;/*! showdown 11-11-2016 */
+;/*! showdown 21-12-2016 */
 (function(){
 /**
  * Created by Tivie on 13-07-2015.
@@ -60942,6 +60994,11 @@ function getDefaultOpts(simple) {
     simplifiedAutoLink: {
       defaultValue: false,
       describe: 'Turn on/off GFM autolink style',
+      type: 'boolean'
+    },
+    excludeTrailingPunctuationFromURLs: {
+      defaultValue: false,
+      describe: 'Excludes trailing punctuation from links generated with autoLinking',
       type: 'boolean'
     },
     literalMidWordUnderscores: {
@@ -60988,6 +61045,16 @@ function getDefaultOpts(simple) {
       defaultValue: false,
       description: 'Disables the requirement of indenting nested sublists by 4 spaces',
       type: 'boolean'
+    },
+    simpleLineBreaks: {
+      defaultValue: false,
+      description: 'Parses simple line breaks as <br> (GFM Style)',
+      type: 'boolean'
+    },
+    requireSpaceBeforeHeadingText: {
+      defaultValue: false,
+      description: 'Makes adding a space between `#` and the header text mandatory (GFM Style)',
+      type: 'boolean'
     }
   };
   if (simple === false) {
@@ -61016,13 +61083,16 @@ var showdown = {},
         omitExtraWLInCodeBlocks:              true,
         prefixHeaderId:                       'user-content-',
         simplifiedAutoLink:                   true,
+        excludeTrailingPunctuationFromURLs:   true,
         literalMidWordUnderscores:            true,
         strikethrough:                        true,
         tables:                               true,
         tablesHeaderId:                       true,
         ghCodeBlocks:                         true,
         tasklists:                            true,
-        disableForced4SpacesIndentedSublists: true
+        disableForced4SpacesIndentedSublists: true,
+        simpleLineBreaks:                     true,
+        requireSpaceBeforeHeadingText:        true
       },
       vanilla: getDefaultOpts(true)
     };
@@ -61730,7 +61800,7 @@ showdown.Converter = function (converterOptions) {
           outputModifiers.push(ext[i]);
           break;
       }
-      if (ext[i].hasOwnProperty(listeners)) {
+      if (ext[i].hasOwnProperty('listeners')) {
         for (var ln in ext[i].listeners) {
           if (ext[i].listeners.hasOwnProperty(ln)) {
             listen(ln, ext[i].listeners[ln]);
@@ -61871,6 +61941,9 @@ showdown.Converter = function (converterOptions) {
     // Standardize line endings
     text = text.replace(/\r\n/g, '\n'); // DOS to Unix
     text = text.replace(/\r/g, '\n'); // Mac to Unix
+
+    // Stardardize line spaces (nbsp causes trouble in older browsers and some regex flavors)
+    text = text.replace(/\u00A0/g, ' ');
 
     if (options.smartIndentationFix) {
       text = rTrimInputText(text);
@@ -62085,9 +62158,10 @@ showdown.subParser('autoLinks', function (text, options, globals) {
 
   text = globals.converter._dispatch('autoLinks.before', text, options, globals);
 
-  var simpleURLRegex  = /\b(((https?|ftp|dict):\/\/|www\.)[^'">\s]+\.[^'">\s]+)(?=\s|$)(?!["<>])/gi,
+  var simpleURLRegex  = /\b(((https?|ftp|dict):\/\/|www\.)[^'">\s]+\.[^'">\s]+)()(?=\s|$)(?!["<>])/gi,
+      simpleURLRegex2 = /\b(((https?|ftp|dict):\/\/|www\.)[^'">\s]+\.[^'">\s]+?)([.!?()]?)(?=\s|$)(?!["<>])/gi,
       delimUrlRegex   = /<(((https?|ftp|dict):\/\/|www\.)[^'">\s]+)>/gi,
-      simpleMailRegex = /(?:^|\s)([A-Za-z0-9!#$%&'*+-/=?^_`\{|}~\.]+@[-a-z0-9]+(\.[-a-z0-9]+)*\.[a-z]+)(?:$|\s)/gi,
+      simpleMailRegex = /(?:^|\s)([A-Za-z0-9!#$%&'*+-/=?^_`{|}~.]+@[-a-z0-9]+(\.[-a-z0-9]+)*\.[a-z]+)(?:$|\s)/gi,
       delimMailRegex  = /<(?:mailto:)?([-.\w]+@[-a-z0-9]+(\.[-a-z0-9]+)*\.[a-z]+)>/gi;
 
   text = text.replace(delimUrlRegex, replaceLink);
@@ -62096,20 +62170,28 @@ showdown.subParser('autoLinks', function (text, options, globals) {
   // Email addresses: <address@domain.foo>
 
   if (options.simplifiedAutoLink) {
-    text = text.replace(simpleURLRegex, replaceLink);
+    if (options.excludeTrailingPunctuationFromURLs) {
+      text = text.replace(simpleURLRegex2, replaceLink);
+    } else {
+      text = text.replace(simpleURLRegex, replaceLink);
+    }
     text = text.replace(simpleMailRegex, replaceMail);
   }
 
-  function replaceLink(wm, link) {
-    var lnkTxt = link;
+  function replaceLink(wm, link, m2, m3, trailingPunctuation) {
+    var lnkTxt = link,
+        append = '';
     if (/^www\./i.test(link)) {
       link = link.replace(/^www\./i, 'http://www.');
     }
-    return '<a href="' + link + '">' + lnkTxt + '</a>';
+    if (options.excludeTrailingPunctuationFromURLs && trailingPunctuation) {
+      append = trailingPunctuation;
+    }
+    return '<a href="' + link + '">' + lnkTxt + '</a>' + append;
   }
 
-  function replaceMail(wholeMatch, m1) {
-    var unescapedStr = showdown.subParser('unescapeSpecialChars')(m1);
+  function replaceMail(wholeMatch, mail) {
+    var unescapedStr = showdown.subParser('unescapeSpecialChars')(mail);
     return showdown.subParser('encodeEmailAddress')(unescapedStr);
   }
 
@@ -62134,9 +62216,9 @@ showdown.subParser('blockGamut', function (text, options, globals) {
 
   // Do Horizontal Rules:
   var key = showdown.subParser('hashBlock')('<hr />', options, globals);
-  text = text.replace(/^[ ]{0,2}([ ]?\*[ ]?){3,}[ \t]*$/gm, key);
-  text = text.replace(/^[ ]{0,2}([ ]?\-[ ]?){3,}[ \t]*$/gm, key);
-  text = text.replace(/^[ ]{0,2}([ ]?_[ ]?){3,}[ \t]*$/gm, key);
+  text = text.replace(/^ {0,2}( ?-){3,}[ \t]*$/gm, key);
+  text = text.replace(/^ {0,2}( ?\*){3,}[ \t]*$/gm, key);
+  text = text.replace(/^ {0,2}( ?_){3,}[ \t]*$/gm, key);
 
   text = showdown.subParser('lists')(text, options, globals);
   text = showdown.subParser('codeBlocks')(text, options, globals);
@@ -62608,7 +62690,7 @@ showdown.subParser('hashHTMLSpans', function (text, config, globals) {
   var matches = showdown.helper.matchRecursiveRegExp(text, '<code\\b[^>]*>', '</code>', 'gi');
 
   for (var i = 0; i < matches.length; ++i) {
-    text = text.replace(matches[i][0], '~L' + (globals.gHtmlSpans.push(matches[i][0]) - 1) + 'L');
+    text = text.replace(matches[i][0], '~C' + (globals.gHtmlSpans.push(matches[i][0]) - 1) + 'C');
   }
   return text;
 });
@@ -62620,7 +62702,7 @@ showdown.subParser('unhashHTMLSpans', function (text, config, globals) {
   'use strict';
 
   for (var i = 0; i < globals.gHtmlSpans.length; ++i) {
-    text = text.replace('~L' + i + 'L', globals.gHtmlSpans[i]);
+    text = text.replace('~C' + i + 'C', globals.gHtmlSpans[i]);
   }
 
   return text;
@@ -62684,7 +62766,9 @@ showdown.subParser('headers', function (text, options, globals) {
   //  ...
   //  ###### Header 6
   //
-  text = text.replace(/^(#{1,6})[ \t]*(.+?)[ \t]*#*\n+/gm, function (wholeMatch, m1, m2) {
+  var atxStyle = (options.requireSpaceBeforeHeadingText) ? /^(#{1,6})[ \t]+(.+?)[ \t]*#*\n+/gm : /^(#{1,6})[ \t]*(.+?)[ \t]*#*\n+/gm;
+
+  text = text.replace(atxStyle, function (wholeMatch, m1, m2) {
     var span = showdown.subParser('spanGamut')(m2, options, globals),
         hID = (options.noHeaderId) ? '' : ' id="' + headerId(m2) + '"',
         hLevel = headerLevelStart - 1 + m1.length,
@@ -62825,8 +62909,8 @@ showdown.subParser('italicsAndBold', function (text, options, globals) {
  */
 showdown.subParser('lists', function (text, options, globals) {
   'use strict';
-
   text = globals.converter._dispatch('lists.before', text, options, globals);
+
   /**
    * Process the contents of a single ordered or unordered list, splitting it
    * into individual list items.
@@ -62892,6 +62976,18 @@ showdown.subParser('lists', function (text, options, globals) {
         });
       }
 
+      // ISSUE #312
+      // This input: - - - a
+      // causes trouble to the parser, since it interprets it as:
+      // <ul><li><li><li>a</li></li></li></ul>
+      // instead of:
+      // <ul><li>- - a</li></ul>
+      // So, to prevent it, we will put a marker (~A)in the beginning of the line
+      // Kind of hackish/monkey patching, but seems more effective than overcomplicating the list parser
+      item = item.replace(/^([-*+]|\d\.)[ \t]+[\S\n ]*/g, function (wm2) {
+        return '~A' + wm2;
+      });
+
       // m1 - Leading line or
       // Has a double return (multi paragraph) or
       // Has sublist
@@ -62902,13 +62998,20 @@ showdown.subParser('lists', function (text, options, globals) {
         // Recursion for sub-lists:
         item = showdown.subParser('lists')(item, options, globals);
         item = item.replace(/\n$/, ''); // chomp(item)
+        item = showdown.subParser('hashHTMLBlocks')(item, options, globals);
+        item = item.replace(/\n\n+/g, '\n\n');
         if (isParagraphed) {
           item = showdown.subParser('paragraphs')(item, options, globals);
         } else {
           item = showdown.subParser('spanGamut')(item, options, globals);
         }
       }
+
+      // now we need to remove the marker (~A)
+      item = item.replace('~A', '');
+      // we can finally wrap the line in list item tags
       item =  '<li' + bulletStyle + '>' + item + '</li>\n';
+
       return item;
     });
 
@@ -62985,7 +63088,6 @@ showdown.subParser('lists', function (text, options, globals) {
 
   // strip sentinel
   text = text.replace(/~0/, '');
-
   text = globals.converter._dispatch('lists.after', text, options, globals);
   return text;
 });
@@ -63119,8 +63221,14 @@ showdown.subParser('spanGamut', function (text, options, globals) {
   text = showdown.subParser('italicsAndBold')(text, options, globals);
   text = showdown.subParser('strikethrough')(text, options, globals);
 
-  // Do hard breaks:
-  text = text.replace(/  +\n/g, ' <br />\n');
+  // Do hard breaks
+  if (options.simpleLineBreaks) {
+    // GFM style hard breaks
+    text = text.replace(/\b\n\b/g, '<br />\n');
+  } else {
+    // Vanilla hard breaks
+    text = text.replace(/\b  +\n\b/g, '<br />\n');
+  }
 
   text = globals.converter._dispatch('spanGamut.after', text, options, globals);
   return text;
@@ -65985,22 +66093,19 @@ function getTagNameAsync(array) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.SET_SEARCH_VALUE = exports.CHANGE_VALUE = exports.FETCH_INDEX = exports.SET_CURRENT_PAGE_NUMBER = exports.SET_PAGINATION = exports.FETCH_TAG = exports.FETCH_CATEGORY = exports.SAVE_MEDIA = exports.SAVE_ROUTING_KEY = exports.RESET_LIST = undefined;
+exports.FETCH_INDEX = exports.SET_CURRENT_PAGE_NUMBER = exports.FETCH_USER = exports.FETCH_CATEGORY = exports.SAVE_MEDIA = exports.SAVE_ROUTING_KEY = exports.RESET_LIST = undefined;
 exports.resetList = resetList;
 exports.saveRoutingKey = saveRoutingKey;
 exports.saveMedia = saveMedia;
 exports.saveMediaAsync = saveMediaAsync;
 exports.fetchCategory = fetchCategory;
 exports.fetchCategoryAsync = fetchCategoryAsync;
-exports.fetchTag = fetchTag;
-exports.fetchTagAsync = fetchTagAsync;
-exports.setPagination = setPagination;
+exports.fetchUser = fetchUser;
+exports.fetchUserAsync = fetchUserAsync;
 exports.setCurrentPageNumber = setCurrentPageNumber;
 exports.fetchIndex = fetchIndex;
 exports.fetchIndexAsync = fetchIndexAsync;
 exports.searchArticleAsync = searchArticleAsync;
-exports.changeValue = changeValue;
-exports.setSearchValue = setSearchValue;
 
 var _nodeFetch = require('node-fetch');
 
@@ -66074,16 +66179,16 @@ function fetchCategoryAsync() {
   };
 }
 
-var FETCH_TAG = exports.FETCH_TAG = 'FETCH_TAG';
-function fetchTag(payload) {
+var FETCH_USER = exports.FETCH_USER = 'FETCH_USER';
+function fetchUser(payload) {
   return {
-    type: FETCH_TAG,
+    type: FETCH_USER,
     payload: payload
   };
 }
-function fetchTagAsync() {
+function fetchUserAsync() {
   return function (dispatch) {
-    return (0, _nodeFetch2.default)(_config2.default.blogUrl + '/wp-json/wp/v2/tags', {
+    return (0, _nodeFetch2.default)(_config2.default.blogUrl + '/wp-json/wp/v2/users', {
       method: 'get',
       mode: 'cors'
     }).then(function (res) {
@@ -66092,16 +66197,8 @@ function fetchTagAsync() {
       }
       return console.dir(res);
     }).then(function (res) {
-      return dispatch(fetchTag(res));
+      return dispatch(fetchUser(res));
     });
-  };
-}
-
-var SET_PAGINATION = exports.SET_PAGINATION = 'SET_PAGINATION';
-function setPagination(payload) {
-  return {
-    type: SET_PAGINATION,
-    payload: payload
   };
 }
 
@@ -66125,25 +66222,42 @@ function fetchIndex(payload) {
 function fetchIndexAsync(callback, page) {
   return function (dispatch) {
     return callback(page).then(function (res) {
-      return [Promise.resolve(res[0]).then(function (index) {
-        return dispatch(fetchIndex(index));
-      }), dispatch(setPagination(res[1]))];
+      return Promise.resolve(res[0]).then(function (index) {
+        return dispatch(fetchIndex({ index: index, page: res[1] }));
+      });
     });
   };
 }
 
-// 検索
-// fetchIndexでディスパッチ
-// redux-thunk
 function searchArticleAsync(callback, keyword, page) {
   return function (dispatch) {
     return callback(keyword, page).then(function (res) {
-      return [Promise.resolve(res[0]).then(function (index) {
-        return dispatch(fetchIndex(index));
-      }), dispatch(setPagination(res[1]))];
+      return Promise.resolve(res[0]).then(function (index) {
+        return dispatch(fetchIndex({ index: index, page: res[1] }));
+      });
     });
   };
 }
+
+},{"../../config":1,"node-fetch":94}],357:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.SET_SEARCH_VALUE = exports.CHANGE_VALUE = undefined;
+exports.changeValue = changeValue;
+exports.setSearchValue = setSearchValue;
+
+var _nodeFetch = require('node-fetch');
+
+var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
+
+var _config = require('../../config');
+
+var _config2 = _interopRequireDefault(_config);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var CHANGE_VALUE = exports.CHANGE_VALUE = 'CHANGE_VALUE';
 function changeValue(payload) {
@@ -66161,7 +66275,7 @@ function setSearchValue(payload) {
   };
 }
 
-},{"../../config":1,"node-fetch":94}],357:[function(require,module,exports){
+},{"../../config":1,"node-fetch":94}],358:[function(require,module,exports){
 'use strict';
 
 var _react = require('react');
@@ -66235,7 +66349,7 @@ _reactDom2.default.render(_react2.default.createElement(
   )
 ), document.querySelector('.content'));
 
-},{"./reducers/archiveReducer":364,"./reducers/indexReducer":365,"./reducers/rootReducer":366,"./routes.jsx":367,"./store":368,"react":315,"react-dom":119,"react-redux":248,"react-router":284,"react-router-redux":254,"redux":333,"redux-thunk":327}],358:[function(require,module,exports){
+},{"./reducers/archiveReducer":365,"./reducers/indexReducer":366,"./reducers/rootReducer":367,"./routes.jsx":368,"./store":369,"react":315,"react-dom":119,"react-redux":248,"react-router":284,"react-router-redux":254,"redux":333,"redux-thunk":327}],359:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66325,14 +66439,21 @@ var Archive = function (_React$Component) {
 }(_react2.default.Component);
 
 Archive.propTypes = {
+  article: _react2.default.PropTypes.shape({
+    tags: _react2.default.PropTypes.array
+  }),
+  params: _react2.default.PropTypes.shape({
+    id: _react2.default.PropTypes.string
+  }),
+  gettedTag: _react2.default.PropTypes.bool,
   handleFetch: _react2.default.PropTypes.func,
   handleGet: _react2.default.PropTypes.func
 };
 
-// Connect to Redux
 function mapStateToProps(state) {
   return {
     category: state.index.category,
+    user: state.index.user,
     article: state.archive.article,
     tags: state.archive.tags,
     gettedTag: state.archive.gettedTag
@@ -66351,7 +66472,7 @@ function mapDispatchToProps(dispatch) {
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Archive);
 
-},{"../../config":1,"../actions/archiveAction":355,"../views/archive/Article.jsx":369,"node-fetch":94,"react":315,"react-redux":248}],359:[function(require,module,exports){
+},{"../../config":1,"../actions/archiveAction":355,"../views/archive/Article.jsx":370,"node-fetch":94,"react":315,"react-redux":248}],360:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66479,7 +66600,7 @@ function mapDispatchToProps(dispatch) {
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Category);
 
-},{"../../config":1,"../actions/indexAction":356,"../views/index/IndexComp.jsx":373,"node-fetch":94,"react":315,"react-redux":248}],360:[function(require,module,exports){
+},{"../../config":1,"../actions/indexAction":356,"../views/index/IndexComp.jsx":377,"node-fetch":94,"react":315,"react-redux":248}],361:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66607,7 +66728,7 @@ function mapDispatchToProps(dispatch) {
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Index);
 
-},{"../../config":1,"../actions/indexAction":356,"../views/index/IndexComp.jsx":373,"node-fetch":94,"react":315,"react-redux":248}],361:[function(require,module,exports){
+},{"../../config":1,"../actions/indexAction":356,"../views/index/IndexComp.jsx":377,"node-fetch":94,"react":315,"react-redux":248}],362:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66622,7 +66743,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = require('react-redux');
 
-var _indexAction = require('../actions/indexAction');
+var _rootAction = require('../actions/rootAction');
 
 var _Header = require('../views/root/Header.jsx');
 
@@ -66686,17 +66807,17 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
   return {
     handleChange: function handleChange(keyword) {
-      dispatch((0, _indexAction.changeValue)(keyword));
+      dispatch((0, _rootAction.changeValue)(keyword));
     },
     handleSend: function handleSend(keyword) {
-      dispatch((0, _indexAction.setSearchValue)(keyword));
+      dispatch((0, _rootAction.setSearchValue)(keyword));
     }
   };
 }
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Root);
 
-},{"../actions/indexAction":356,"../views/root/Footer.jsx":377,"../views/root/Header.jsx":378,"../views/root/Sidebar.jsx":380,"react":315,"react-redux":248}],362:[function(require,module,exports){
+},{"../actions/rootAction":357,"../views/root/Footer.jsx":381,"../views/root/Header.jsx":382,"../views/root/Sidebar.jsx":384,"react":315,"react-redux":248}],363:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66828,7 +66949,7 @@ function mapDispatchToProps(dispatch) {
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Search);
 
-},{"../../config":1,"../actions/indexAction":356,"../views/index/IndexComp.jsx":373,"node-fetch":94,"react":315,"react-redux":248}],363:[function(require,module,exports){
+},{"../../config":1,"../actions/indexAction":356,"../views/index/IndexComp.jsx":377,"node-fetch":94,"react":315,"react-redux":248}],364:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66953,7 +67074,7 @@ function mapDispatchToProps(dispatch) {
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Tag);
 
-},{"../../config":1,"../actions/indexAction":356,"../views/index/IndexComp.jsx":373,"node-fetch":94,"react":315,"react-redux":248}],364:[function(require,module,exports){
+},{"../../config":1,"../actions/indexAction":356,"../views/index/IndexComp.jsx":377,"node-fetch":94,"react":315,"react-redux":248}],365:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -66985,7 +67106,7 @@ var archiveReducer = exports.archiveReducer = function archiveReducer() {
   }
 };
 
-},{"../actions/archiveAction":355}],365:[function(require,module,exports){
+},{"../actions/archiveAction":355}],366:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67010,13 +67131,10 @@ var indexReducer = exports.indexReducer = function indexReducer() {
       });
     case _indexAction.FETCH_INDEX:
       return Object.assign({}, state, {
-        index: action.payload,
+        index: action.payload.index,
+        total: action.payload.page['x-wp-total'][0],
+        totalPages: action.payload.page['x-wp-totalpages'][0],
         resetList: false
-      });
-    case _indexAction.SET_PAGINATION:
-      return Object.assign({}, state, {
-        total: action.payload['x-wp-total'][0],
-        totalPages: action.payload['x-wp-totalpages'][0]
       });
     case _indexAction.SET_CURRENT_PAGE_NUMBER:
       return Object.assign({}, state, {
@@ -67026,16 +67144,16 @@ var indexReducer = exports.indexReducer = function indexReducer() {
       return Object.assign({}, state, {
         category: action.payload
       });
-    case _indexAction.FETCH_TAG:
+    case _indexAction.FETCH_USER:
       return Object.assign({}, state, {
-        tag: action.payload
+        user: action.payload
       });
     default:
       return state;
   }
 };
 
-},{"../actions/indexAction":356}],366:[function(require,module,exports){
+},{"../actions/indexAction":356}],367:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67043,18 +67161,18 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.rootReducer = undefined;
 
-var _indexAction = require('../actions/indexAction');
+var _rootAction = require('../actions/rootAction');
 
 var rootReducer = exports.rootReducer = function rootReducer() {
   var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
   var action = arguments[1];
 
   switch (action.type) {
-    case _indexAction.CHANGE_VALUE:
+    case _rootAction.CHANGE_VALUE:
       return Object.assign({}, state, {
         inputValue: action.payload
       });
-    case _indexAction.SET_SEARCH_VALUE:
+    case _rootAction.SET_SEARCH_VALUE:
       return Object.assign({}, state, {
         searchValue: action.payload
       });
@@ -67063,7 +67181,7 @@ var rootReducer = exports.rootReducer = function rootReducer() {
   }
 };
 
-},{"../actions/indexAction":356}],367:[function(require,module,exports){
+},{"../actions/rootAction":357}],368:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67118,7 +67236,7 @@ var routes = exports.routes = _react2.default.createElement(
   _react2.default.createElement(_reactRouter.Route, { path: '/tag/:tag/:page', component: _Tag2.default })
 );
 
-},{"./containers/Archive.jsx":358,"./containers/Category.jsx":359,"./containers/Index.jsx":360,"./containers/Root.jsx":361,"./containers/Search.jsx":362,"./containers/Tag.jsx":363,"react":315,"react-router":284}],368:[function(require,module,exports){
+},{"./containers/Archive.jsx":359,"./containers/Category.jsx":360,"./containers/Index.jsx":361,"./containers/Root.jsx":362,"./containers/Search.jsx":363,"./containers/Tag.jsx":364,"react":315,"react-router":284}],369:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67132,12 +67250,14 @@ var configureStore = exports.configureStore = function configureStore(reducers, 
   return (0, _redux.createStore)(reducers, initialState, middleware);
 };
 
-},{"redux":333}],369:[function(require,module,exports){
+},{"redux":333}],370:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _react = require('react');
 
@@ -67155,9 +67275,21 @@ var _ArticleCategory = require('./ArticleCategory.jsx');
 
 var _ArticleCategory2 = _interopRequireDefault(_ArticleCategory);
 
+var _ArticleDate = require('./ArticleDate.jsx');
+
+var _ArticleDate2 = _interopRequireDefault(_ArticleDate);
+
 var _ArticleTag = require('./ArticleTag.jsx');
 
 var _ArticleTag2 = _interopRequireDefault(_ArticleTag);
+
+var _ArticleTitle = require('./ArticleTitle.jsx');
+
+var _ArticleTitle2 = _interopRequireDefault(_ArticleTitle);
+
+var _ArticleUser = require('./ArticleUser.jsx');
+
+var _ArticleUser2 = _interopRequireDefault(_ArticleUser);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -67172,25 +67304,15 @@ var Article = function Article(props) {
     'div',
     null,
     _react2.default.createElement(_ArticleBreadcrumb2.default, props),
-    _react2.default.createElement(
-      'h2',
-      null,
-      props.article.title.rendered
-    ),
-    _react2.default.createElement(
-      'p',
-      null,
-      _react2.default.createElement(
-        'date',
-        null,
-        props.article.date
-      )
-    ),
+    _react2.default.createElement(_ArticleTitle2.default, props),
+    _react2.default.createElement(_ArticleDate2.default, props),
+    _react2.default.createElement(_ArticleUser2.default, _extends({}, props, { nameOnly: true })),
     _react2.default.createElement(_ArticleCategory2.default, props),
     _react2.default.createElement(_ArticleTag2.default, props),
     _react2.default.createElement('div', { dangerouslySetInnerHTML: rawMarkup('content') }),
     _react2.default.createElement(_ArticleCategory2.default, props),
-    _react2.default.createElement(_ArticleTag2.default, props)
+    _react2.default.createElement(_ArticleTag2.default, props),
+    _react2.default.createElement(_ArticleUser2.default, _extends({}, props, { nameOnly: false }))
   );
 
   return _react2.default.createElement(
@@ -67199,11 +67321,18 @@ var Article = function Article(props) {
     article
   );
 };
-Article.propTypes = {};
+Article.propTypes = {
+  article: _react2.default.PropTypes.shape({
+    id: _react2.default.PropTypes.number
+  }),
+  params: _react2.default.PropTypes.shape({
+    id: _react2.default.PropTypes.string
+  })
+};
 
 exports.default = Article;
 
-},{"./ArticleBreadcrumb.jsx":370,"./ArticleCategory.jsx":371,"./ArticleTag.jsx":372,"react":315,"showdown":335}],370:[function(require,module,exports){
+},{"./ArticleBreadcrumb.jsx":371,"./ArticleCategory.jsx":372,"./ArticleDate.jsx":373,"./ArticleTag.jsx":374,"./ArticleTitle.jsx":375,"./ArticleUser.jsx":376,"react":315,"showdown":335}],371:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67286,7 +67415,7 @@ ArticleBreadcrumb.propTypes = {
 
 exports.default = ArticleBreadcrumb;
 
-},{"lodash":93,"react":315,"react-router":284}],371:[function(require,module,exports){
+},{"lodash":93,"react":315,"react-router":284}],372:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67344,7 +67473,44 @@ ArticleCategory.propTypes = {
 
 exports.default = ArticleCategory;
 
-},{"lodash":93,"react":315,"react-router":284}],372:[function(require,module,exports){
+},{"lodash":93,"react":315,"react-router":284}],373:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var ArticleDate = function ArticleDate(props) {
+  function formatDate(date) {
+    var dividedDate = date.split('T')[0].split('-');
+    return dividedDate[0] + '\u5E74' + dividedDate[1] + '\u6708' + dividedDate[2] + '\u65E5';
+  }
+
+  return _react2.default.createElement(
+    'p',
+    null,
+    _react2.default.createElement(
+      'time',
+      null,
+      formatDate(props.article.date)
+    )
+  );
+};
+ArticleDate.propTypes = {
+  article: _react2.default.PropTypes.shape({
+    date: _react2.default.PropTypes.string
+  })
+};
+
+exports.default = ArticleDate;
+
+},{"react":315}],374:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67380,7 +67546,7 @@ ArticleTag.propTypes = {
 
 exports.default = ArticleTag;
 
-},{"react":315,"react-router":284}],373:[function(require,module,exports){
+},{"react":315,"react-router":284}],375:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67391,7 +67557,97 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactRouter = require('react-router');
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var ArticleTitle = function ArticleTitle(props) {
+  return _react2.default.createElement(
+    'h2',
+    null,
+    props.article.title.rendered
+  );
+};
+ArticleTitle.propTypes = {
+  article: _react2.default.PropTypes.shape({
+    title: _react2.default.PropTypes.shape({
+      rendered: _react2.default.PropTypes.string
+    })
+  })
+};
+
+exports.default = ArticleTitle;
+
+},{"react":315}],376:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var ArticleUser = function ArticleUser(props) {
+  var getUser = function getUser(userList) {
+    return function (id) {
+      return userList.map(function (user, i) {
+        return user.id === id ? i : null;
+      });
+    };
+  };
+  var userId = getUser(props.user)(props.article.author);
+  var user = props.nameOnly ? _react2.default.createElement(
+    'p',
+    null,
+    props.user[userId].slug
+  ) : _react2.default.createElement(
+    'section',
+    null,
+    _react2.default.createElement(
+      'h3',
+      null,
+      '\u3053\u306E\u8A18\u4E8B\u3092\u66F8\u3044\u305F\u4EBA'
+    ),
+    _react2.default.createElement('img', { src: props.user[userId].avatar_urls['96'], alt: props.user[userId].slug }),
+    _react2.default.createElement(
+      'p',
+      null,
+      props.user[userId].slug
+    ),
+    _react2.default.createElement(
+      'p',
+      null,
+      props.user[userId].description
+    )
+  );
+  return _react2.default.createElement(
+    'div',
+    null,
+    user
+  );
+};
+ArticleUser.propTypes = {
+  article: _react2.default.PropTypes.shape({
+    author: _react2.default.PropTypes.number
+  }),
+  nameOnly: _react2.default.PropTypes.bool,
+  user: _react2.default.PropTypes.arrayOf(_react2.default.PropTypes.object)
+};
+
+exports.default = ArticleUser;
+
+},{"react":315}],377:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
 
 var _IndexTitle = require('./IndexTitle.jsx');
 
@@ -67416,15 +67672,10 @@ var IndexComp = function IndexComp(props) {
     _react2.default.createElement(_Pagination2.default, props)
   );
 };
-IndexComp.propTypes = {
-  resetList: _react2.default.PropTypes.bool,
-  routingKey: _react2.default.PropTypes.string,
-  index: _react2.default.PropTypes.array
-};
 
 exports.default = IndexComp;
 
-},{"./IndexList.jsx":374,"./IndexTitle.jsx":375,"./Pagination.jsx":376,"react":315,"react-router":284}],374:[function(require,module,exports){
+},{"./IndexList.jsx":378,"./IndexTitle.jsx":379,"./Pagination.jsx":380,"react":315}],378:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67444,18 +67695,20 @@ var _showdown2 = _interopRequireDefault(_showdown);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var IndexList = function IndexList(props) {
-  console.log(props);
   function rawMarkup(content) {
     var converter = new _showdown2.default.Converter();
     var markup = converter.makeHtml(content.toString());
     return { __html: markup };
+  }
+  function formatDate(date) {
+    var dividedDate = date.split('T')[0].split('-');
+    return dividedDate[0] + '\u5E74' + dividedDate[1] + '\u6708' + dividedDate[2] + '\u65E5';
   }
 
   var list = props.resetList && props.routingKey !== '' ? '' : props.index.map(function (item) {
     return _react2.default.createElement(
       'li',
       { key: item.id },
-      _react2.default.createElement('p', null),
       _react2.default.createElement(
         _reactRouter.Link,
         { to: '/archive/' + item.id },
@@ -67464,7 +67717,11 @@ var IndexList = function IndexList(props) {
       _react2.default.createElement(
         'p',
         null,
-        item.date
+        _react2.default.createElement(
+          'time',
+          null,
+          formatDate(item.date)
+        )
       ),
       _react2.default.createElement('p', { dangerouslySetInnerHTML: rawMarkup(item.excerpt.rendered) })
     );
@@ -67478,12 +67735,12 @@ var IndexList = function IndexList(props) {
 IndexList.propTypes = {
   resetList: _react2.default.PropTypes.bool,
   routingKey: _react2.default.PropTypes.string,
-  index: _react2.default.PropTypes.array
+  index: _react2.default.PropTypes.arrayOf(_react2.default.PropTypes.object)
 };
 
 exports.default = IndexList;
 
-},{"react":315,"react-router":284,"showdown":335}],375:[function(require,module,exports){
+},{"react":315,"react-router":284,"showdown":335}],379:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67494,29 +67751,29 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactRouter = require('react-router');
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var IndexTitle = function IndexTitle(props) {
   var pathname = props.location.pathname.split('/')[1];
   var getCategory = function getCategory(categoryList) {
     return function (slug) {
-      return categoryList.map(function (category, i) {
+      return categoryList.map(function (category) {
         return category.slug === slug ? category.name : null;
       });
     };
   };
-  var getTitle = function getTitle(pathname) {
-    switch (pathname) {
+  var getTitle = function getTitle(name) {
+    switch (name) {
       case 'search':
         return '\u300C' + props.params.keyword + '\u300D\u306E\u691C\u7D22\u7D50\u679C';
       case 'category':
-        var getCategoryid = getCategory(props.category);
-        var categoryName = getCategoryid(props.params.category).find(function (i) {
-          return i != null;
-        });
-        return '\u300C' + categoryName + '\u300D\u30AB\u30C6\u30B4\u30EA\u306E\u8A18\u4E8B\u4E00\u89A7';
+        {
+          var getCategoryid = getCategory(props.category);
+          var categoryName = getCategoryid(props.params.category).find(function (i) {
+            return i != null;
+          });
+          return '\u300C' + categoryName + '\u300D\u30AB\u30C6\u30B4\u30EA\u306E\u8A18\u4E8B\u4E00\u89A7';
+        }
       case 'tag':
         return '\u300C' + props.params.tag + '\u300D\u30BF\u30B0\u306E\u8A18\u4E8B\u4E00\u89A7';
       default:
@@ -67543,7 +67800,7 @@ var IndexTitle = function IndexTitle(props) {
 
 exports.default = IndexTitle;
 
-},{"react":315,"react-router":284}],376:[function(require,module,exports){
+},{"react":315}],380:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67565,8 +67822,8 @@ var Pagination = function Pagination(props) {
 
   var pathname = props.location.pathname.split('/');
 
-  var path = function path(pathname, routeParams) {
-    switch (pathname) {
+  var path = function path(name, routeParams) {
+    switch (name) {
       case 'search':
         return '/search/' + routeParams.keyword + '/';
       case 'category':
@@ -67672,7 +67929,7 @@ Pagination.propTypes = {
 
 exports.default = Pagination;
 
-},{"react":315,"react-router":284}],377:[function(require,module,exports){
+},{"react":315,"react-router":284}],381:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67704,7 +67961,7 @@ var Footer = function Footer(props) {
 
 exports.default = Footer;
 
-},{"../../../config":1,"react":315}],378:[function(require,module,exports){
+},{"../../../config":1,"react":315}],382:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67746,7 +68003,7 @@ var Header = function Header(props) {
 
 exports.default = Header;
 
-},{"../../../config":1,"./SearchForm.jsx":379,"react":315,"react-router":284}],379:[function(require,module,exports){
+},{"../../../config":1,"./SearchForm.jsx":383,"react":315,"react-router":284}],383:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -67786,7 +68043,7 @@ var SearchForm = function SearchForm(props) {
 
 exports.default = SearchForm;
 
-},{"react":315}],380:[function(require,module,exports){
+},{"react":315}],384:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -67809,4 +68066,4 @@ var Sidebar = function Sidebar(props) {
 
 exports.default = Sidebar;
 
-},{"react":315}]},{},[357]);
+},{"react":315}]},{},[358]);

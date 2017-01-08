@@ -1,9 +1,9 @@
 import {
   FETCH_INDEX,
   FETCH_CATEGORY,
-  FETCH_TAG, RESET_LIST,
+  FETCH_USER,
+  RESET_LIST,
   SAVE_ROUTING_KEY,
-  SET_PAGINATION,
   SET_CURRENT_PAGE_NUMBER,
 } from '../actions/indexAction';
 
@@ -19,13 +19,10 @@ export const indexReducer = (state = {}, action) => {
       });
     case FETCH_INDEX:
       return Object.assign({}, state, {
-        index: action.payload,
+        index: action.payload.index,
+        total: action.payload.page['x-wp-total'][0],
+        totalPages: action.payload.page['x-wp-totalpages'][0],
         resetList: false,
-      });
-    case SET_PAGINATION:
-      return Object.assign({}, state, {
-        total: action.payload['x-wp-total'][0],
-        totalPages: action.payload['x-wp-totalpages'][0],
       });
     case SET_CURRENT_PAGE_NUMBER:
       return Object.assign({}, state, {
@@ -35,9 +32,9 @@ export const indexReducer = (state = {}, action) => {
       return Object.assign({}, state, {
         category: action.payload,
       });
-    case FETCH_TAG:
+    case FETCH_USER:
       return Object.assign({}, state, {
-        tag: action.payload,
+        user: action.payload,
       });
     default:
       return state;

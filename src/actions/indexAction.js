@@ -61,16 +61,16 @@ export function fetchCategoryAsync() {
   };
 }
 
-export const FETCH_TAG = 'FETCH_TAG';
-export function fetchTag(payload) {
+export const FETCH_USER = 'FETCH_USER';
+export function fetchUser(payload) {
   return {
-    type: FETCH_TAG,
+    type: FETCH_USER,
     payload,
   };
 }
-export function fetchTagAsync() {
+export function fetchUserAsync() {
   return (dispatch) => {
-    return fetch(`${config.blogUrl}/wp-json/wp/v2/tags`, {
+    return fetch(`${config.blogUrl}/wp-json/wp/v2/users`, {
       method: 'get',
       mode: 'cors',
     }).then((res) => {
@@ -79,16 +79,8 @@ export function fetchTagAsync() {
       }
       return console.dir(res);
     }).then(
-      res => dispatch(fetchTag(res)),
+      res => dispatch(fetchUser(res)),
     );
-  };
-}
-
-export const SET_PAGINATION = 'SET_PAGINATION';
-export function setPagination(payload) {
-  return {
-    type: SET_PAGINATION,
-    payload,
   };
 }
 
@@ -113,41 +105,19 @@ export function fetchIndex(payload) {
 export function fetchIndexAsync(callback, page) {
   return (dispatch) => {
     return callback(page).then(
-      res => ([
-        Promise.resolve(res[0]).then(index => dispatch(fetchIndex(index))),
-        dispatch(setPagination(res[1])),
-      ]),
+      res => Promise.resolve(res[0]).then(
+        index => dispatch(fetchIndex({ index, page: res[1] })),
+      ),
     );
   };
 }
 
-
-// 検索
-// fetchIndexでディスパッチ
-// redux-thunk
 export function searchArticleAsync(callback, keyword, page) {
   return (dispatch) => {
     return callback(keyword, page).then(
-      res => ([
-        Promise.resolve(res[0]).then(index => dispatch(fetchIndex(index))),
-        dispatch(setPagination(res[1])),
-      ]),
+      res => Promise.resolve(res[0]).then(
+        index => dispatch(fetchIndex({ index, page: res[1] })),
+      ),
     );
-  };
-}
-
-export const CHANGE_VALUE = 'CHANGE_VALUE';
-export function changeValue(payload) {
-  return {
-    type: CHANGE_VALUE,
-    payload,
-  };
-}
-
-export const SET_SEARCH_VALUE = 'SET_SEARCH_VALUE';
-export function setSearchValue(payload) {
-  return {
-    type: SET_SEARCH_VALUE,
-    payload,
   };
 }

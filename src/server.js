@@ -9,12 +9,17 @@ import thunk from 'redux-thunk';
 import serialize from 'serialize-javascript';
 import { Provider } from 'react-redux';
 
+// Store
 import { rootState, indexState, archiveState } from './state';
-import { indexReducer } from './reducers/indexReducer';
-import { rootReducer } from './reducers/rootReducer';
-import { archiveReducer } from './reducers/archiveReducer';
 import { configureStore } from './store';
-import { fetchCategoryAsync, fetchTagAsync } from './actions/indexAction';
+
+// Reducers
+import { rootReducer } from './reducers/rootReducer';
+import { indexReducer } from './reducers/indexReducer';
+import { archiveReducer } from './reducers/archiveReducer';
+
+// Actions
+import { fetchCategoryAsync, fetchUserAsync } from './actions/indexAction';
 
 import config from '../config';
 import { routes } from './routes.jsx';
@@ -69,7 +74,7 @@ function handleRender(req, res) {
         c => (c.handleFetch ? c.handleFetch(store.dispatch, renderProps) : Promise.resolve('no fetching')),
       );
       const promise2 = fetchCategoryAsync();
-      const promise3 = fetchTagAsync();
+      const promise3 = fetchUserAsync();
 
       Promise.all([
         Promise.all(promise1),

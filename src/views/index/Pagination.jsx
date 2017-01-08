@@ -8,8 +8,8 @@ const Pagination = (props) => {
 
   const pathname = props.location.pathname.split('/');
 
-  const path = (pathname, routeParams) => {
-    switch (pathname) {
+  const path = (name, routeParams) => {
+    switch (name) {
       case 'search':
         return `/search/${routeParams.keyword}/`;
       case 'category':

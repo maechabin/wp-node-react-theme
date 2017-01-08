@@ -42,14 +42,21 @@ class Archive extends React.Component {
   }
 }
 Archive.propTypes = {
+  article: React.PropTypes.shape({
+    tags: React.PropTypes.array,
+  }),
+  params: React.PropTypes.shape({
+    id: React.PropTypes.string,
+  }),
+  gettedTag: React.PropTypes.bool,
   handleFetch: React.PropTypes.func,
   handleGet: React.PropTypes.func,
 };
 
-// Connect to Redux
 function mapStateToProps(state) {
   return {
     category: state.index.category,
+    user: state.index.user,
     article: state.archive.article,
     tags: state.archive.tags,
     gettedTag: state.archive.gettedTag,

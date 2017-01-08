@@ -1,19 +1,19 @@
 import React from 'react';
-import { Link } from 'react-router';
 
-const IndexTitle = props => {
+const IndexTitle = (props) => {
   const pathname = props.location.pathname.split('/')[1];
   const getCategory = categoryList => slug => categoryList.map(
-    (category, i) => (category.slug === slug ? category.name : null),
+    category => (category.slug === slug ? category.name : null),
   );
-  const getTitle = (pathname) => {
-    switch (pathname) {
+  const getTitle = (name) => {
+    switch (name) {
       case 'search':
         return `「${props.params.keyword}」の検索結果`;
-      case 'category':
+      case 'category': {
         const getCategoryid = getCategory(props.category);
         const categoryName = getCategoryid(props.params.category).find(i => i != null);
         return `「${categoryName}」カテゴリの記事一覧`;
+      }
       case 'tag':
         return `「${props.params.tag}」タグの記事一覧`;
       default:
@@ -28,6 +28,6 @@ const IndexTitle = props => {
       <p>{total}</p>
     </div>
   );
-}
+};
 
 export default IndexTitle;

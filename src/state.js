@@ -3,8 +3,8 @@ export const rootState = {
   searchValue: '',
 };
 export const indexState = {
-  category: {},
-  tag: {},
+  category: [],
+  user: [],
   index: [],
   routingKey: '',
   resetList: true,

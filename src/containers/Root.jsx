@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 
-import { changeValue, setSearchValue } from '../actions/indexAction';
+import { changeValue, setSearchValue } from '../actions/rootAction';
 
 // view files
 import Header from '../views/root/Header.jsx';
