@@ -1,7 +1,5 @@
 import {
   FETCH_INDEX,
-  FETCH_CATEGORY,
-  FETCH_USER,
   RESET_LIST,
   SAVE_ROUTING_KEY,
   SET_CURRENT_PAGE_NUMBER,
@@ -27,14 +25,6 @@ export const indexReducer = (state = {}, action) => {
     case SET_CURRENT_PAGE_NUMBER:
       return Object.assign({}, state, {
         currentPage: action.payload,
-      });
-    case FETCH_CATEGORY:
-      return Object.assign({}, state, {
-        category: action.payload,
-      });
-    case FETCH_USER:
-      return Object.assign({}, state, {
-        user: action.payload,
       });
     default:
       return state;

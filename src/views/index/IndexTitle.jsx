@@ -29,5 +29,19 @@ const IndexTitle = (props) => {
     </div>
   );
 };
+IndexTitle.propTypes = {
+  category: React.PropTypes.arrayOf(React.PropTypes.object),
+  location: React.PropTypes.shape({
+    pathname: React.PropTypes.string,
+  }),
+  params: React.PropTypes.shape({
+    category: React.PropTypes.string,
+    keyword: React.PropTypes.string,
+    tag: React.PropTypes.string,
+  }),
+  resetList: React.PropTypes.bool,
+  routingKey: React.PropTypes.string,
+  total: React.PropTypes.number,
+};
 
 export default IndexTitle;

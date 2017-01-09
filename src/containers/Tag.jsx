@@ -53,6 +53,10 @@ class Tag extends React.Component {
   }
 }
 Tag.propTypes = {
+  params: React.PropTypes.shape({
+    tag: React.PropTypes.string,
+    page: React.PropTypes.string,
+  }),
   routingKey: React.PropTypes.string,
   handleInit: React.PropTypes.func,
   handleFetch: React.PropTypes.func,

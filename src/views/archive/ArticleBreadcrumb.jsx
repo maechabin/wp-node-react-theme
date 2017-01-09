@@ -2,13 +2,13 @@ import React from 'react';
 import { Link } from 'react-router';
 import _ from 'lodash';
 
-const ArticleBreadcrumb = props => {
+const ArticleBreadcrumb = (props) => {
   const getCategory = categoryList => id => categoryList.map(
     (category, i) => (category.id === id ? i : null),
   );
   const getCategoryId = getCategory(props.category);
   const category = _.isEmpty(props.article.categories) ? '' : props.article.categories.map(
-    (id) => getCategoryId(id).find(i => i != null),
+    id => getCategoryId(id).find(i => i != null),
   );
 
   return (

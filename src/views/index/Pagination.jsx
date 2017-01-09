@@ -68,6 +68,19 @@ Pagination.defaultProps = {
   },
 };
 Pagination.propTypes = {
+  location: React.PropTypes.shape({
+    pathname: React.PropTypes.string,
+  }),
+  params: React.PropTypes.shape({
+    page: React.PropTypes.string,
+  }),
+  resetList: React.PropTypes.bool,
+  routingKey: React.PropTypes.string,
+  routeParams: React.PropTypes.shape({
+    category: React.PropTypes.string,
+    keyword: React.PropTypes.string,
+    tag: React.PropTypes.string,
+  }),
   totalPages: React.PropTypes.number,
 };
 

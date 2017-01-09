@@ -14,13 +14,17 @@ const IndexList = (props) => {
   }
 
   const list = (props.resetList && props.routingKey !== '') ? '' : props.index.map(
-    item => (
-      <li key={item.id}>
-        <Link to={`/archive/${item.id}`}>{item.title.rendered}</Link>
-        <p><time>{formatDate(item.date)}</time></p>
-        <p dangerouslySetInnerHTML={rawMarkup(item.excerpt.rendered)} />
-      </li>
-    ),
+    (item) => {
+      const eyecatch = (item.source_url) ? <img src={item.source_url} alt={item.title.rendered} /> : '';
+      return (
+        <li key={item.id}>
+          {eyecatch}
+          <Link to={`/archive/${item.id}`}>{item.title.rendered}</Link>
+          <p><time>{formatDate(item.date)}</time></p>
+          <p dangerouslySetInnerHTML={rawMarkup(item.excerpt.rendered)} />
+        </li>
+      );
+    },
   );
   return (
     <ul>{list}</ul>

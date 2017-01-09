@@ -21,7 +21,7 @@ class Root extends React.Component {
   }
 }
 Root.propTypes = {
-  children: React.PropTypes.object,
+  children: React.PropTypes.node.isRequired,
 };
 
 // Connect to Redux

@@ -19,7 +19,7 @@ import { indexReducer } from './reducers/indexReducer';
 import { archiveReducer } from './reducers/archiveReducer';
 
 // Actions
-import { fetchCategoryAsync, fetchUserAsync } from './actions/indexAction';
+import { fetchCategoryAsync, fetchUserAsync } from './actions/rootAction';
 
 import config from '../config';
 import { routes } from './routes.jsx';

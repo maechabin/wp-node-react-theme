@@ -50,6 +50,9 @@ class Index extends React.Component {
 }
 Index.propTypes = {
   routingKey: React.PropTypes.string,
+  params: React.PropTypes.shape({
+    page: React.PropTypes.string,
+  }),
   handleInit: React.PropTypes.func,
   handleFetch: React.PropTypes.func,
 };

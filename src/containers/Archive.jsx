@@ -55,8 +55,8 @@ Archive.propTypes = {
 
 function mapStateToProps(state) {
   return {
-    category: state.index.category,
-    user: state.index.user,
+    category: state.root.category,
+    user: state.root.user,
     article: state.archive.article,
     tags: state.archive.tags,
     gettedTag: state.archive.gettedTag,

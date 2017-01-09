@@ -66093,16 +66093,12 @@ function getTagNameAsync(array) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.FETCH_INDEX = exports.SET_CURRENT_PAGE_NUMBER = exports.FETCH_USER = exports.FETCH_CATEGORY = exports.SAVE_MEDIA = exports.SAVE_ROUTING_KEY = exports.RESET_LIST = undefined;
+exports.FETCH_INDEX = exports.SAVE_MEDIA = exports.SET_CURRENT_PAGE_NUMBER = exports.SAVE_ROUTING_KEY = exports.RESET_LIST = undefined;
 exports.resetList = resetList;
 exports.saveRoutingKey = saveRoutingKey;
+exports.setCurrentPageNumber = setCurrentPageNumber;
 exports.saveMedia = saveMedia;
 exports.saveMediaAsync = saveMediaAsync;
-exports.fetchCategory = fetchCategory;
-exports.fetchCategoryAsync = fetchCategoryAsync;
-exports.fetchUser = fetchUser;
-exports.fetchUserAsync = fetchUserAsync;
-exports.setCurrentPageNumber = setCurrentPageNumber;
 exports.fetchIndex = fetchIndex;
 exports.fetchIndexAsync = fetchIndexAsync;
 exports.searchArticleAsync = searchArticleAsync;
@@ -66132,6 +66128,14 @@ function saveRoutingKey(payload) {
   };
 }
 
+var SET_CURRENT_PAGE_NUMBER = exports.SET_CURRENT_PAGE_NUMBER = 'SET_CURRENT_PAGE_NUMBER';
+function setCurrentPageNumber(payload) {
+  return {
+    type: SET_CURRENT_PAGE_NUMBER,
+    payload: payload
+  };
+}
+
 // 任意のIDのアイキャッチ画像の取得、保存
 var SAVE_MEDIA = exports.SAVE_MEDIA = 'SAVE_MEDIA';
 function saveMedia(payload) {
@@ -66140,21 +66144,99 @@ function saveMedia(payload) {
     payload: payload
   };
 }
-function saveMediaAsync(id) {
+function saveMediaAsync(url) {
+  return (0, _nodeFetch2.default)(url, {
+    method: 'get',
+    mode: 'cors'
+  }).then(function (res) {
+    if (res.status === 200) {
+      return res.json();
+    }
+    return console.dir(res);
+  }).then(function (res2) {
+    return {
+      source_url: res2.source_url
+    };
+  });
+}
+
+// Action creator
+var FETCH_INDEX = exports.FETCH_INDEX = 'FETCH_INDEX';
+function fetchIndex(payload) {
+  return {
+    type: FETCH_INDEX,
+    payload: payload
+  };
+}
+// redux-thunk
+function fetchIndexAsync(callback, page) {
   return function (dispatch) {
-    return (0, _nodeFetch2.default)(_config2.default.blogUrl + '/wp-json/wp/v2/media/' + id, {
-      method: 'get',
-      mode: 'cors'
-    }).then(function (res) {
-      if (res.status === 200) {
-        return res.json();
-      }
-      return console.dir(res);
-    }).then(function (res) {
-      return console.log(res);
+    return callback(page).then(function (res) {
+      return Promise.resolve(res[0]).then(function (res2) {
+        return Promise.all(res2.map(function (res3) {
+          if (res3._links['wp:featuredmedia']) {
+            return saveMediaAsync(res3._links['wp:featuredmedia'][0].href);
+          }
+          return false;
+        })).then(function (res4) {
+          return res2.map(function (obj, i) {
+            return Object.assign({}, obj, res4[i]);
+          });
+        }).then(function (index) {
+          return dispatch(fetchIndex({ index: index, page: res[1] }));
+        });
+      });
     });
   };
 }
+
+// index => dispatch(fetchIndex({ index, page: res[1] })),
+// x => saveMediaAsync(x._links['wp:featuredmedia'][0].href, x.id),
+
+function searchArticleAsync(callback, keyword, page) {
+  return function (dispatch) {
+    return callback(keyword, page).then(function (res) {
+      return Promise.resolve(res[0]).then(function (res2) {
+        return Promise.all(res2.map(function (res3) {
+          if (res3._links['wp:featuredmedia']) {
+            return saveMediaAsync(res3._links['wp:featuredmedia'][0].href);
+          }
+          return false;
+        })).then(function (res4) {
+          return res2.map(function (obj, i) {
+            return Object.assign({}, obj, res4[i]);
+          });
+        }).then(function (index) {
+          return dispatch(fetchIndex({ index: index, page: res[1] }));
+        });
+      });
+    });
+  };
+}
+
+},{"../../config":1,"node-fetch":94}],357:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.SET_SEARCH_VALUE = exports.CHANGE_VALUE = exports.FETCH_USER = exports.FETCH_CATEGORY = undefined;
+exports.fetchCategory = fetchCategory;
+exports.fetchCategoryAsync = fetchCategoryAsync;
+exports.fetchUser = fetchUser;
+exports.fetchUserAsync = fetchUserAsync;
+exports.changeValue = changeValue;
+exports.setSearchValue = setSearchValue;
+
+var _nodeFetch = require('node-fetch');
+
+var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
+
+var _config = require('../../config');
+
+var _config2 = _interopRequireDefault(_config);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var FETCH_CATEGORY = exports.FETCH_CATEGORY = 'FETCH_CATEGORY';
 function fetchCategory(payload) {
@@ -66201,63 +66283,6 @@ function fetchUserAsync() {
     });
   };
 }
-
-var SET_CURRENT_PAGE_NUMBER = exports.SET_CURRENT_PAGE_NUMBER = 'SET_CURRENT_PAGE_NUMBER';
-function setCurrentPageNumber(payload) {
-  return {
-    type: SET_CURRENT_PAGE_NUMBER,
-    payload: payload
-  };
-}
-
-// Action creator
-var FETCH_INDEX = exports.FETCH_INDEX = 'FETCH_INDEX';
-function fetchIndex(payload) {
-  return {
-    type: FETCH_INDEX,
-    payload: payload
-  };
-}
-// redux-thunk
-function fetchIndexAsync(callback, page) {
-  return function (dispatch) {
-    return callback(page).then(function (res) {
-      return Promise.resolve(res[0]).then(function (index) {
-        return dispatch(fetchIndex({ index: index, page: res[1] }));
-      });
-    });
-  };
-}
-
-function searchArticleAsync(callback, keyword, page) {
-  return function (dispatch) {
-    return callback(keyword, page).then(function (res) {
-      return Promise.resolve(res[0]).then(function (index) {
-        return dispatch(fetchIndex({ index: index, page: res[1] }));
-      });
-    });
-  };
-}
-
-},{"../../config":1,"node-fetch":94}],357:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.SET_SEARCH_VALUE = exports.CHANGE_VALUE = undefined;
-exports.changeValue = changeValue;
-exports.setSearchValue = setSearchValue;
-
-var _nodeFetch = require('node-fetch');
-
-var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
-
-var _config = require('../../config');
-
-var _config2 = _interopRequireDefault(_config);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var CHANGE_VALUE = exports.CHANGE_VALUE = 'CHANGE_VALUE';
 function changeValue(payload) {
@@ -66452,8 +66477,8 @@ Archive.propTypes = {
 
 function mapStateToProps(state) {
   return {
-    category: state.index.category,
-    user: state.index.user,
+    category: state.root.category,
+    user: state.root.user,
     article: state.archive.article,
     tags: state.archive.tags,
     gettedTag: state.archive.gettedTag
@@ -66568,15 +66593,18 @@ var Category = function (_React$Component) {
 Category.propTypes = {
   routingKey: _react2.default.PropTypes.string,
   category: _react2.default.PropTypes.arrayOf(_react2.default.PropTypes.object),
+  params: _react2.default.PropTypes.shape({
+    category: _react2.default.PropTypes.string,
+    page: _react2.default.PropTypes.string
+  }),
   handleInit: _react2.default.PropTypes.func,
   handleFetch: _react2.default.PropTypes.func
 };
 
-// Connect to Redux
 function mapStateToProps(state) {
   return {
     index: state.index.index,
-    category: state.index.category,
+    category: state.root.category,
     resetList: state.index.resetList,
     total: Number(state.index.total),
     totalPages: Number(state.index.totalPages),
@@ -66695,6 +66723,9 @@ var Index = function (_React$Component) {
 
 Index.propTypes = {
   routingKey: _react2.default.PropTypes.string,
+  params: _react2.default.PropTypes.shape({
+    page: _react2.default.PropTypes.string
+  }),
   handleInit: _react2.default.PropTypes.func,
   handleFetch: _react2.default.PropTypes.func
 };
@@ -66795,7 +66826,7 @@ var Root = function (_React$Component) {
 }(_react2.default.Component);
 
 Root.propTypes = {
-  children: _react2.default.PropTypes.object
+  children: _react2.default.PropTypes.node.isRequired
 };
 
 // Connect to Redux
@@ -66874,7 +66905,6 @@ var Search = function (_React$Component) {
   }, {
     key: 'componentWillUpdate',
     value: function componentWillUpdate(nextProps) {
-      console.log(nextProps);
       if (nextProps.keyword !== '' && nextProps.keyword !== this.props.params.keyword) {
         return this.props.handleFetch(nextProps.keyword, Search.fetchData, this.props.params.page);
       }
@@ -66915,7 +66945,10 @@ var Search = function (_React$Component) {
 }(_react2.default.Component);
 
 Search.propTypes = {
-  params: _react2.default.PropTypes.object,
+  params: _react2.default.PropTypes.shape({
+    keyword: _react2.default.PropTypes.string,
+    page: _react2.default.PropTypes.string
+  }),
   keyword: _react2.default.PropTypes.string,
   routingKey: _react2.default.PropTypes.string,
   handleInit: _react2.default.PropTypes.func,
@@ -67043,6 +67076,10 @@ var Tag = function (_React$Component) {
 }(_react2.default.Component);
 
 Tag.propTypes = {
+  params: _react2.default.PropTypes.shape({
+    tag: _react2.default.PropTypes.string,
+    page: _react2.default.PropTypes.string
+  }),
   routingKey: _react2.default.PropTypes.string,
   handleInit: _react2.default.PropTypes.func,
   handleFetch: _react2.default.PropTypes.func
@@ -67140,14 +67177,6 @@ var indexReducer = exports.indexReducer = function indexReducer() {
       return Object.assign({}, state, {
         currentPage: action.payload
       });
-    case _indexAction.FETCH_CATEGORY:
-      return Object.assign({}, state, {
-        category: action.payload
-      });
-    case _indexAction.FETCH_USER:
-      return Object.assign({}, state, {
-        user: action.payload
-      });
     default:
       return state;
   }
@@ -67175,6 +67204,14 @@ var rootReducer = exports.rootReducer = function rootReducer() {
     case _rootAction.SET_SEARCH_VALUE:
       return Object.assign({}, state, {
         searchValue: action.payload
+      });
+    case _rootAction.FETCH_CATEGORY:
+      return Object.assign({}, state, {
+        category: action.payload
+      });
+    case _rootAction.FETCH_USER:
+      return Object.assign({}, state, {
+        user: action.payload
       });
     default:
       return state;
@@ -67706,9 +67743,11 @@ var IndexList = function IndexList(props) {
   }
 
   var list = props.resetList && props.routingKey !== '' ? '' : props.index.map(function (item) {
+    var eyecatch = item.source_url ? _react2.default.createElement('img', { src: item.source_url, alt: item.title.rendered }) : '';
     return _react2.default.createElement(
       'li',
       { key: item.id },
+      eyecatch,
       _react2.default.createElement(
         _reactRouter.Link,
         { to: '/archive/' + item.id },
@@ -67796,6 +67835,20 @@ var IndexTitle = function IndexTitle(props) {
       total
     )
   );
+};
+IndexTitle.propTypes = {
+  category: _react2.default.PropTypes.arrayOf(_react2.default.PropTypes.object),
+  location: _react2.default.PropTypes.shape({
+    pathname: _react2.default.PropTypes.string
+  }),
+  params: _react2.default.PropTypes.shape({
+    category: _react2.default.PropTypes.string,
+    keyword: _react2.default.PropTypes.string,
+    tag: _react2.default.PropTypes.string
+  }),
+  resetList: _react2.default.PropTypes.bool,
+  routingKey: _react2.default.PropTypes.string,
+  total: _react2.default.PropTypes.number
 };
 
 exports.default = IndexTitle;
@@ -67924,6 +67977,19 @@ Pagination.defaultProps = {
   }
 };
 Pagination.propTypes = {
+  location: _react2.default.PropTypes.shape({
+    pathname: _react2.default.PropTypes.string
+  }),
+  params: _react2.default.PropTypes.shape({
+    page: _react2.default.PropTypes.string
+  }),
+  resetList: _react2.default.PropTypes.bool,
+  routingKey: _react2.default.PropTypes.string,
+  routeParams: _react2.default.PropTypes.shape({
+    category: _react2.default.PropTypes.string,
+    keyword: _react2.default.PropTypes.string,
+    tag: _react2.default.PropTypes.string
+  }),
   totalPages: _react2.default.PropTypes.number
 };
 
@@ -68039,6 +68105,14 @@ var SearchForm = function SearchForm(props) {
       '\u691C\u7D22'
     )
   );
+};
+SearchForm.propTypes = {
+  router: _react2.default.PropTypes.shape({
+    push: _react2.default.PropTypes.func
+  }),
+  inputValue: _react2.default.PropTypes.string,
+  handleSend: _react2.default.PropTypes.func,
+  handleChange: _react2.default.PropTypes.func
 };
 
 exports.default = SearchForm;

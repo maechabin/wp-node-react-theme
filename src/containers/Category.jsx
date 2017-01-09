@@ -59,15 +59,18 @@ class Category extends React.Component {
 Category.propTypes = {
   routingKey: React.PropTypes.string,
   category: React.PropTypes.arrayOf(React.PropTypes.object),
+  params: React.PropTypes.shape({
+    category: React.PropTypes.string,
+    page: React.PropTypes.string,
+  }),
   handleInit: React.PropTypes.func,
   handleFetch: React.PropTypes.func,
 };
 
-// Connect to Redux
 function mapStateToProps(state) {
   return {
     index: state.index.index,
-    category: state.index.category,
+    category: state.root.category,
     resetList: state.index.resetList,
     total: Number(state.index.total),
     totalPages: Number(state.index.totalPages),

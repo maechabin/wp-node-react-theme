@@ -35,7 +35,6 @@ class Search extends React.Component {
   }
 
   componentWillUpdate(nextProps) {
-    console.log(nextProps);
     if (nextProps.keyword !== '' && nextProps.keyword !== this.props.params.keyword) {
       return this.props.handleFetch(nextProps.keyword, Search.fetchData, this.props.params.page);
     }
@@ -54,7 +53,10 @@ class Search extends React.Component {
   }
 }
 Search.propTypes = {
-  params: React.PropTypes.object,
+  params: React.PropTypes.shape({
+    keyword: React.PropTypes.string,
+    page: React.PropTypes.string,
+  }),
   keyword: React.PropTypes.string,
   routingKey: React.PropTypes.string,
   handleInit: React.PropTypes.func,

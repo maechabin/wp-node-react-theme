@@ -1,10 +1,10 @@
 export const rootState = {
+  category: [],
+  user: [],
   inputValue: '',
   searchValue: '',
 };
 export const indexState = {
-  category: [],
-  user: [],
   index: [],
   routingKey: '',
   resetList: true,

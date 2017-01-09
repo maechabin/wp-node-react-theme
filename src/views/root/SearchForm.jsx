@@ -20,5 +20,13 @@ const SearchForm = (props) => {
     </div>
   );
 };
+SearchForm.propTypes = {
+  router: React.PropTypes.shape({
+    push: React.PropTypes.func,
+  }),
+  inputValue: React.PropTypes.string,
+  handleSend: React.PropTypes.func,
+  handleChange: React.PropTypes.func,
+};
 
 export default SearchForm;
