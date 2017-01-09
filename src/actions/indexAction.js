@@ -1,5 +1,4 @@
 import fetch from 'node-fetch';
-import config from '../../config';
 
 export const RESET_LIST = 'RESET_LISET';
 export function resetList() {
@@ -81,9 +80,6 @@ export function fetchIndexAsync(callback, page) {
     );
   };
 }
-
-// index => dispatch(fetchIndex({ index, page: res[1] })),
-// x => saveMediaAsync(x._links['wp:featuredmedia'][0].href, x.id),
 
 export function searchArticleAsync(callback, keyword, page) {
   return (dispatch) => {

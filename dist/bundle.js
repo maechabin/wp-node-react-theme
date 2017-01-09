@@ -66107,10 +66107,6 @@ var _nodeFetch = require('node-fetch');
 
 var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
 
-var _config = require('../../config');
-
-var _config2 = _interopRequireDefault(_config);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var RESET_LIST = exports.RESET_LIST = 'RESET_LISET';
@@ -66190,9 +66186,6 @@ function fetchIndexAsync(callback, page) {
   };
 }
 
-// index => dispatch(fetchIndex({ index, page: res[1] })),
-// x => saveMediaAsync(x._links['wp:featuredmedia'][0].href, x.id),
-
 function searchArticleAsync(callback, keyword, page) {
   return function (dispatch) {
     return callback(keyword, page).then(function (res) {
@@ -66214,7 +66207,7 @@ function searchArticleAsync(callback, keyword, page) {
   };
 }
 
-},{"../../config":1,"node-fetch":94}],357:[function(require,module,exports){
+},{"node-fetch":94}],357:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
