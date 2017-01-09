@@ -5,8 +5,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = {
-  blogTitle: 'LifeGadget',
-  blogTitleTag: 'LifeGadget（ライフガジェット）',
+  blogTitle: 'wp-node-react-theme',
+  blogTitleTag: 'wp-node-react-theme',
   blogUrl: 'http://localhost:8888',
   perPage: 20
 };
