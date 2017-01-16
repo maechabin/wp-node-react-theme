@@ -1,0 +1,48 @@
+@charset "UTF-8";
+body, div, pre, p, blockquote, form, fieldset, input, textarea, select, option,
+dl, dt, dd, ul, ol, li,
+h1, h2, h3, h4, h5, h6,
+table, th, td, embed, object {
+  margin: 0;
+  padding: 0;
+  vertical-align: baseline; }
+
+img {
+  max-width: 100%; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 游ゴシック, "Yu Gothic", YuGothic, "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic ProN", メイリオ, Meiryo, "Noto Sans Japanese", "Noto Sans CJK JP", sans-serif; }
+
+.more-link {
+  display: none; }
+
+.header {
+  box-sizing: border-box;
+  padding: 16px;
+  background-color: #000; }
+  .header h1 a {
+    color: #fff;
+    text-decoration: none; }
+
+.index {
+  width: 720px; }
+
+.article {
+  width: 720px; }
+  .article h2 {
+    font-size: 40px; }
+  .article h3 {
+    font-size: 32px; }
+  .article h4 {
+    font-size: 24px; }
+  .article p {
+    text-align: justify;
+    font-size: 18px;
+    line-height: 2;
+    margin-bottom: 32px; }
+
+.footer {
+  color: #fff;
+  box-sizing: border-box;
+  padding: 16px;
+  background-color: #000; }
