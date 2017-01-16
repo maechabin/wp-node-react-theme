@@ -5,15 +5,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = {
-<<<<<<< HEAD
   blogTitle: 'wp-node-react-theme',
   blogTitleTag: 'wp-node-react-theme',
   blogUrl: 'http://localhost:8888',
-=======
-  blogTitle: 'LifeGadget',
-  blogTitleTag: 'LifeGadget（ライフガジェット）',
-  blogUrl: 'http://localhost:8080/wordpress',
->>>>>>> 6b99a54339deaa8d8bb3f369a0e1b46ba8cdcc75
   perPage: 20
 };
 
@@ -4673,12 +4667,18 @@ module.exports = hyphenateStyleName;
  * will remain to ensure logic does not differ in production.
  */
 
-function invariant(condition, format, a, b, c, d, e, f) {
-  if (process.env.NODE_ENV !== 'production') {
+var validateFormat = function validateFormat(format) {};
+
+if (process.env.NODE_ENV !== 'production') {
+  validateFormat = function validateFormat(format) {
     if (format === undefined) {
       throw new Error('invariant requires an error message argument');
     }
-  }
+  };
+}
+
+function invariant(condition, format, a, b, c, d, e, f) {
+  validateFormat(format);
 
   if (!condition) {
     var error;
@@ -7152,7 +7152,6 @@ module.exports = {
     //
     // Overall, it seems that it's a mess :( http://www8.plala.or.jp/tkubota1/unicode-symbols-map2.html
 
-
     'shiftjis': {
         type: '_dbcs',
         table: function() { return require('./tables/shiftjis.json') },
@@ -7163,8 +7162,10 @@ module.exports = {
     'mskanji': 'shiftjis',
     'sjis': 'shiftjis',
     'windows31j': 'shiftjis',
+    'ms31j': 'shiftjis',
     'xsjis': 'shiftjis',
     'windows932': 'shiftjis',
+    'ms932': 'shiftjis',
     '932': 'shiftjis',
     'cp932': 'shiftjis',
 
@@ -7178,8 +7179,10 @@ module.exports = {
     // TODO: IBM CCSID 942 = CP932, but F0-F9 custom chars and other char changes.
     // TODO: IBM CCSID 943 = Shift_JIS = CP932 with original Shift_JIS lower 128 chars.
 
+
     // == Chinese/GBK ==========================================================
     // http://en.wikipedia.org/wiki/GBK
+    // We mostly implement W3C recommendation: https://www.w3.org/TR/encoding/#gbk-encoder
 
     // Oldest GB2312 (1981, ~7600 chars) is a subset of CP936
     'gb2312': 'cp936',
@@ -7188,11 +7191,10 @@ module.exports = {
     'csgb2312': 'cp936',
     'csiso58gb231280': 'cp936',
     'euccn': 'cp936',
-    'isoir58': 'gbk',
 
     // Microsoft's CP936 is a subset and approximation of GBK.
-    // TODO: Euro = 0x80 in cp936, but not in GBK (where it's valid but undefined)
     'windows936': 'cp936',
+    'ms936': 'cp936',
     '936': 'cp936',
     'cp936': {
         type: '_dbcs',
@@ -7205,24 +7207,28 @@ module.exports = {
         table: function() { return require('./tables/cp936.json').concat(require('./tables/gbk-added.json')) },
     },
     'xgbk': 'gbk',
+    'isoir58': 'gbk',
 
     // GB18030 is an algorithmic extension of GBK.
+    // Main source: https://www.w3.org/TR/encoding/#gbk-encoder
+    // http://icu-project.org/docs/papers/gb18030.html
+    // http://source.icu-project.org/repos/icu/data/trunk/charset/data/xml/gb-18030-2000.xml
+    // http://www.khngai.com/chinese/charmap/tblgbk.php?page=0
     'gb18030': {
         type: '_dbcs',
         table: function() { return require('./tables/cp936.json').concat(require('./tables/gbk-added.json')) },
         gb18030: function() { return require('./tables/gb18030-ranges.json') },
+        encodeSkipVals: [0x80],
+        encodeAdd: {'€': 0xA2E3},
     },
 
     'chinese': 'gb18030',
 
-    // TODO: Support GB18030 (~27000 chars + whole unicode mapping, cp54936)
-    // http://icu-project.org/docs/papers/gb18030.html
-    // http://source.icu-project.org/repos/icu/data/trunk/charset/data/xml/gb-18030-2000.xml
-    // http://www.khngai.com/chinese/charmap/tblgbk.php?page=0
 
     // == Korean ===============================================================
     // EUC-KR, KS_C_5601 and KS X 1001 are exactly the same.
     'windows949': 'cp949',
+    'ms949': 'cp949',
     '949': 'cp949',
     'cp949': {
         type: '_dbcs',
@@ -7263,6 +7269,7 @@ module.exports = {
     // Unicode mapping (http://www.unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/OTHER/BIG5.TXT) is said to be wrong.
 
     'windows950': 'cp950',
+    'ms950': 'cp950',
     '950': 'cp950',
     'cp950': {
         type: '_dbcs',
@@ -7280,7 +7287,6 @@ module.exports = {
     'cnbig5': 'big5hkscs',
     'csbig5': 'big5hkscs',
     'xxbig5': 'big5hkscs',
-
 };
 
 },{"./tables/big5-added.json":63,"./tables/cp936.json":64,"./tables/cp949.json":65,"./tables/cp950.json":66,"./tables/eucjp.json":67,"./tables/gb18030-ranges.json":68,"./tables/gbk-added.json":69,"./tables/shiftjis.json":70}],58:[function(require,module,exports){
@@ -9415,6 +9421,8 @@ module.exports=[
 (function (Buffer){
 "use strict"
 
+// Note: UTF16-LE (or UCS2) codec is Node.js native. See encodings/internal.js
+
 // == UTF16-BE codec. ==========================================================
 
 exports.utf16be = Utf16BECodec;
@@ -10673,8 +10681,7 @@ function baseGetTag(value) {
   if (value == null) {
     return value === undefined ? undefinedTag : nullTag;
   }
-  value = Object(value);
-  return (symToStringTag && symToStringTag in value)
+  return (symToStringTag && symToStringTag in Object(value))
     ? getRawTag(value)
     : objectToString(value);
 }
@@ -10908,7 +10915,7 @@ module.exports = isPlainObject;
   var undefined;
 
   /** Used as the semantic version number. */
-  var VERSION = '4.17.2';
+  var VERSION = '4.17.3';
 
   /** Used as the size to enable large array optimizations. */
   var LARGE_ARRAY_SIZE = 200;
@@ -12463,9 +12470,9 @@ module.exports = isPlainObject;
      * Shortcut fusion is an optimization to merge iteratee calls; this avoids
      * the creation of intermediate arrays and can greatly reduce the number of
      * iteratee executions. Sections of a chain sequence qualify for shortcut
-     * fusion if the section is applied to an array of at least `200` elements
-     * and any iteratees accept only one argument. The heuristic for whether a
-     * section qualifies for shortcut fusion is subject to change.
+     * fusion if the section is applied to an array and iteratees accept only
+     * one argument. The heuristic for whether a section qualifies for shortcut
+     * fusion is subject to change.
      *
      * Chaining is supported in custom builds as long as the `_#value` method is
      * directly or indirectly included in the build.
@@ -12624,8 +12631,8 @@ module.exports = isPlainObject;
 
     /**
      * By default, the template delimiters used by lodash are like those in
-     * embedded Ruby (ERB). Change the following template settings to use
-     * alternative delimiters.
+     * embedded Ruby (ERB) as well as ES2015 template strings. Change the
+     * following template settings to use alternative delimiters.
      *
      * @static
      * @memberOf _
@@ -12772,8 +12779,7 @@ module.exports = isPlainObject;
           resIndex = 0,
           takeCount = nativeMin(length, this.__takeCount__);
 
-      if (!isArr || arrLength < LARGE_ARRAY_SIZE ||
-          (arrLength == length && takeCount == length)) {
+      if (!isArr || (!isRight && arrLength == length && takeCount == length)) {
         return baseWrapperValue(array, this.__actions__);
       }
       var result = [];
@@ -12887,7 +12893,7 @@ module.exports = isPlainObject;
      */
     function hashHas(key) {
       var data = this.__data__;
-      return nativeCreate ? data[key] !== undefined : hasOwnProperty.call(data, key);
+      return nativeCreate ? (data[key] !== undefined) : hasOwnProperty.call(data, key);
     }
 
     /**
@@ -13358,24 +13364,6 @@ module.exports = isPlainObject;
      */
     function arrayShuffle(array) {
       return shuffleSelf(copyArray(array));
-    }
-
-    /**
-     * Used by `_.defaults` to customize its `_.assignIn` use.
-     *
-     * @private
-     * @param {*} objValue The destination value.
-     * @param {*} srcValue The source value.
-     * @param {string} key The key of the property to assign.
-     * @param {Object} object The parent object of `objValue`.
-     * @returns {*} Returns the value to assign.
-     */
-    function assignInDefaults(objValue, srcValue, key, object) {
-      if (objValue === undefined ||
-          (eq(objValue, objectProto[key]) && !hasOwnProperty.call(object, key))) {
-        return srcValue;
-      }
-      return objValue;
     }
 
     /**
@@ -13990,8 +13978,7 @@ module.exports = isPlainObject;
       if (value == null) {
         return value === undefined ? undefinedTag : nullTag;
       }
-      value = Object(value);
-      return (symToStringTag && symToStringTag in value)
+      return (symToStringTag && symToStringTag in Object(value))
         ? getRawTag(value)
         : objectToString(value);
     }
@@ -14195,7 +14182,7 @@ module.exports = isPlainObject;
       if (value === other) {
         return true;
       }
-      if (value == null || other == null || (!isObject(value) && !isObjectLike(other))) {
+      if (value == null || other == null || (!isObjectLike(value) && !isObjectLike(other))) {
         return value !== value && other !== other;
       }
       return baseIsEqualDeep(value, other, bitmask, customizer, baseIsEqual, stack);
@@ -14218,17 +14205,12 @@ module.exports = isPlainObject;
     function baseIsEqualDeep(object, other, bitmask, customizer, equalFunc, stack) {
       var objIsArr = isArray(object),
           othIsArr = isArray(other),
-          objTag = arrayTag,
-          othTag = arrayTag;
+          objTag = objIsArr ? arrayTag : getTag(object),
+          othTag = othIsArr ? arrayTag : getTag(other);
 
-      if (!objIsArr) {
-        objTag = getTag(object);
-        objTag = objTag == argsTag ? objectTag : objTag;
-      }
-      if (!othIsArr) {
-        othTag = getTag(other);
-        othTag = othTag == argsTag ? objectTag : othTag;
-      }
+      objTag = objTag == argsTag ? objectTag : objTag;
+      othTag = othTag == argsTag ? objectTag : othTag;
+
       var objIsObj = objTag == objectTag,
           othIsObj = othTag == objectTag,
           isSameTag = objTag == othTag;
@@ -14676,7 +14658,6 @@ module.exports = isPlainObject;
      * @returns {Object} Returns the new object.
      */
     function basePick(object, paths) {
-      object = Object(object);
       return basePickBy(object, paths, function(value, path) {
         return hasIn(object, path);
       });
@@ -16069,8 +16050,7 @@ module.exports = isPlainObject;
           var args = arguments,
               value = args[0];
 
-          if (wrapper && args.length == 1 &&
-              isArray(value) && value.length >= LARGE_ARRAY_SIZE) {
+          if (wrapper && args.length == 1 && isArray(value)) {
             return wrapper.plant(value).value();
           }
           var index = 0,
@@ -16377,7 +16357,7 @@ module.exports = isPlainObject;
       var func = Math[methodName];
       return function(number, precision) {
         number = toNumber(number);
-        precision = nativeMin(toInteger(precision), 292);
+        precision = precision == null ? 0 : nativeMin(toInteger(precision), 292);
         if (precision) {
           // Shift with exponential notation to avoid floating-point issues.
           // See [MDN](https://mdn.io/round#Examples) for more details.
@@ -16482,7 +16462,7 @@ module.exports = isPlainObject;
       thisArg = newData[2];
       partials = newData[3];
       holders = newData[4];
-      arity = newData[9] = newData[9] == null
+      arity = newData[9] = newData[9] === undefined
         ? (isBindKey ? 0 : func.length)
         : nativeMax(newData[9] - length, 0);
 
@@ -16500,6 +16480,63 @@ module.exports = isPlainObject;
       }
       var setter = data ? baseSetData : setData;
       return setWrapToString(setter(result, newData), func, bitmask);
+    }
+
+    /**
+     * Used by `_.defaults` to customize its `_.assignIn` use to assign properties
+     * of source objects to the destination object for all destination properties
+     * that resolve to `undefined`.
+     *
+     * @private
+     * @param {*} objValue The destination value.
+     * @param {*} srcValue The source value.
+     * @param {string} key The key of the property to assign.
+     * @param {Object} object The parent object of `objValue`.
+     * @returns {*} Returns the value to assign.
+     */
+    function customDefaultsAssignIn(objValue, srcValue, key, object) {
+      if (objValue === undefined ||
+          (eq(objValue, objectProto[key]) && !hasOwnProperty.call(object, key))) {
+        return srcValue;
+      }
+      return objValue;
+    }
+
+    /**
+     * Used by `_.defaultsDeep` to customize its `_.merge` use to merge source
+     * objects into destination objects that are passed thru.
+     *
+     * @private
+     * @param {*} objValue The destination value.
+     * @param {*} srcValue The source value.
+     * @param {string} key The key of the property to merge.
+     * @param {Object} object The parent object of `objValue`.
+     * @param {Object} source The parent object of `srcValue`.
+     * @param {Object} [stack] Tracks traversed source values and their merged
+     *  counterparts.
+     * @returns {*} Returns the value to assign.
+     */
+    function customDefaultsMerge(objValue, srcValue, key, object, source, stack) {
+      if (isObject(objValue) && isObject(srcValue)) {
+        // Recursively merge objects and arrays (susceptible to call stack limits).
+        stack.set(srcValue, objValue);
+        baseMerge(objValue, srcValue, undefined, customDefaultsMerge, stack);
+        stack['delete'](srcValue);
+      }
+      return objValue;
+    }
+
+    /**
+     * Used by `_.omit` to customize its `_.cloneDeep` use to only clone plain
+     * objects.
+     *
+     * @private
+     * @param {*} value The value to inspect.
+     * @param {string} key The key of the property to inspect.
+     * @returns {*} Returns the uncloned value or `undefined` to defer cloning to `_.cloneDeep`.
+     */
+    function customOmitClone(value, key) {
+      return (key !== undefined && isPlainObject(value)) ? undefined : value;
     }
 
     /**
@@ -16673,9 +16710,9 @@ module.exports = isPlainObject;
      */
     function equalObjects(object, other, bitmask, customizer, equalFunc, stack) {
       var isPartial = bitmask & COMPARE_PARTIAL_FLAG,
-          objProps = keys(object),
+          objProps = getAllKeys(object),
           objLength = objProps.length,
-          othProps = keys(other),
+          othProps = getAllKeys(other),
           othLength = othProps.length;
 
       if (objLength != othLength && !isPartial) {
@@ -16913,7 +16950,15 @@ module.exports = isPlainObject;
      * @param {Object} object The object to query.
      * @returns {Array} Returns the array of symbols.
      */
-    var getSymbols = nativeGetSymbols ? overArg(nativeGetSymbols, Object) : stubArray;
+    var getSymbols = !nativeGetSymbols ? stubArray : function(object) {
+      if (object == null) {
+        return [];
+      }
+      object = Object(object);
+      return arrayFilter(nativeGetSymbols(object), function(symbol) {
+        return propertyIsEnumerable.call(object, symbol);
+      });
+    };
 
     /**
      * Creates an array of the own and inherited enumerable symbols of `object`.
@@ -17397,29 +17442,6 @@ module.exports = isPlainObject;
       data[1] = newBitmask;
 
       return data;
-    }
-
-    /**
-     * Used by `_.defaultsDeep` to customize its `_.merge` use.
-     *
-     * @private
-     * @param {*} objValue The destination value.
-     * @param {*} srcValue The source value.
-     * @param {string} key The key of the property to merge.
-     * @param {Object} object The parent object of `objValue`.
-     * @param {Object} source The parent object of `srcValue`.
-     * @param {Object} [stack] Tracks traversed source values and their merged
-     *  counterparts.
-     * @returns {*} Returns the value to assign.
-     */
-    function mergeDefaults(objValue, srcValue, key, object, source, stack) {
-      if (isObject(objValue) && isObject(srcValue)) {
-        // Recursively merge objects and arrays (susceptible to call stack limits).
-        stack.set(srcValue, objValue);
-        baseMerge(objValue, srcValue, undefined, mergeDefaults, stack);
-        stack['delete'](srcValue);
-      }
-      return objValue;
     }
 
     /**
@@ -19164,7 +19186,7 @@ module.exports = isPlainObject;
      *
      * var users = [
      *   { 'user': 'barney',  'active': false },
-     *   { 'user': 'fred',    'active': false},
+     *   { 'user': 'fred',    'active': false },
      *   { 'user': 'pebbles', 'active': true }
      * ];
      *
@@ -21733,7 +21755,7 @@ module.exports = isPlainObject;
       if (typeof func != 'function') {
         throw new TypeError(FUNC_ERROR_TEXT);
       }
-      start = start === undefined ? 0 : nativeMax(toInteger(start), 0);
+      start = start == null ? 0 : nativeMax(toInteger(start), 0);
       return baseRest(function(args) {
         var array = args[start],
             otherArgs = castSlice(args, 0, start);
@@ -22403,7 +22425,7 @@ module.exports = isPlainObject;
      * date objects, error objects, maps, numbers, `Object` objects, regexes,
      * sets, strings, symbols, and typed arrays. `Object` objects are compared
      * by their own, not inherited, enumerable properties. Functions and DOM
-     * nodes are **not** supported.
+     * nodes are compared by strict equality, i.e. `===`.
      *
      * @static
      * @memberOf _
@@ -23423,7 +23445,9 @@ module.exports = isPlainObject;
      * // => 3
      */
     function toSafeInteger(value) {
-      return baseClamp(toInteger(value), -MAX_SAFE_INTEGER, MAX_SAFE_INTEGER);
+      return value
+        ? baseClamp(toInteger(value), -MAX_SAFE_INTEGER, MAX_SAFE_INTEGER)
+        : (value === 0 ? value : 0);
     }
 
     /**
@@ -23677,7 +23701,7 @@ module.exports = isPlainObject;
      * // => { 'a': 1, 'b': 2 }
      */
     var defaults = baseRest(function(args) {
-      args.push(undefined, assignInDefaults);
+      args.push(undefined, customDefaultsAssignIn);
       return apply(assignInWith, undefined, args);
     });
 
@@ -23701,7 +23725,7 @@ module.exports = isPlainObject;
      * // => { 'a': { 'b': 2, 'c': 3 } }
      */
     var defaultsDeep = baseRest(function(args) {
-      args.push(undefined, mergeDefaults);
+      args.push(undefined, customDefaultsMerge);
       return apply(mergeWith, undefined, args);
     });
 
@@ -24363,7 +24387,7 @@ module.exports = isPlainObject;
       });
       copyObject(object, getAllKeysIn(object), result);
       if (isDeep) {
-        result = baseClone(result, CLONE_DEEP_FLAG | CLONE_FLAT_FLAG | CLONE_SYMBOLS_FLAG);
+        result = baseClone(result, CLONE_DEEP_FLAG | CLONE_FLAT_FLAG | CLONE_SYMBOLS_FLAG, customOmitClone);
       }
       var length = paths.length;
       while (length--) {
@@ -25512,7 +25536,10 @@ module.exports = isPlainObject;
      */
     function startsWith(string, target, position) {
       string = toString(string);
-      position = baseClamp(toInteger(position), 0, string.length);
+      position = position == null
+        ? 0
+        : baseClamp(toInteger(position), 0, string.length);
+
       target = baseToString(target);
       return string.slice(position, position + target.length) == target;
     }
@@ -25631,9 +25658,9 @@ module.exports = isPlainObject;
         options = undefined;
       }
       string = toString(string);
-      options = assignInWith({}, options, settings, assignInDefaults);
+      options = assignInWith({}, options, settings, customDefaultsAssignIn);
 
-      var imports = assignInWith({}, options.imports, settings.imports, assignInDefaults),
+      var imports = assignInWith({}, options.imports, settings.imports, customDefaultsAssignIn),
           importsKeys = keys(imports),
           importsValues = baseValues(imports, importsKeys);
 
@@ -27717,14 +27744,13 @@ module.exports = isPlainObject;
     // Add `LazyWrapper` methods for `_.drop` and `_.take` variants.
     arrayEach(['drop', 'take'], function(methodName, index) {
       LazyWrapper.prototype[methodName] = function(n) {
-        var filtered = this.__filtered__;
-        if (filtered && !index) {
-          return new LazyWrapper(this);
-        }
         n = n === undefined ? 1 : nativeMax(toInteger(n), 0);
 
-        var result = this.clone();
-        if (filtered) {
+        var result = (this.__filtered__ && !index)
+          ? new LazyWrapper(this)
+          : this.clone();
+
+        if (result.__filtered__) {
           result.__takeCount__ = nativeMin(n, result.__takeCount__);
         } else {
           result.__views__.push({
@@ -37820,6 +37846,28 @@ var getDictionaryKey = function (inst) {
   return '.' + inst._rootNodeID;
 };
 
+function isInteractive(tag) {
+  return tag === 'button' || tag === 'input' || tag === 'select' || tag === 'textarea';
+}
+
+function shouldPreventMouseEvent(name, type, props) {
+  switch (name) {
+    case 'onClick':
+    case 'onClickCapture':
+    case 'onDoubleClick':
+    case 'onDoubleClickCapture':
+    case 'onMouseDown':
+    case 'onMouseDownCapture':
+    case 'onMouseMove':
+    case 'onMouseMoveCapture':
+    case 'onMouseUp':
+    case 'onMouseUpCapture':
+      return !!(props.disabled && isInteractive(type));
+    default:
+      return false;
+  }
+}
+
 /**
  * This is a unified interface for event plugins to be installed and configured.
  *
@@ -37888,7 +37936,12 @@ var EventPluginHub = {
    * @return {?function} The stored callback.
    */
   getListener: function (inst, registrationName) {
+    // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
+    // live here; needs to be moved to a better place soon
     var bankForRegistrationName = listenerBank[registrationName];
+    if (shouldPreventMouseEvent(registrationName, inst._currentElement.type, inst._currentElement.props)) {
+      return null;
+    }
     var key = getDictionaryKey(inst);
     return bankForRegistrationName && bankForRegistrationName[key];
   },
@@ -47343,7 +47396,7 @@ module.exports = ReactUpdates;
 
 'use strict';
 
-module.exports = '15.4.0';
+module.exports = '15.4.1';
 },{}],198:[function(require,module,exports){
 /**
  * Copyright 2013-present, Facebook, Inc.
@@ -47921,18 +47974,6 @@ function isInteractive(tag) {
   return tag === 'button' || tag === 'input' || tag === 'select' || tag === 'textarea';
 }
 
-function shouldPreventMouseEvent(inst) {
-  if (inst) {
-    var disabled = inst._currentElement && inst._currentElement.props.disabled;
-
-    if (disabled) {
-      return isInteractive(inst._tag);
-    }
-  }
-
-  return false;
-}
-
 var SimpleEventPlugin = {
 
   eventTypes: eventTypes,
@@ -48003,10 +48044,7 @@ var SimpleEventPlugin = {
       case 'topMouseDown':
       case 'topMouseMove':
       case 'topMouseUp':
-        // Disabled elements should not respond to mouse events
-        if (shouldPreventMouseEvent(targetInst)) {
-          return null;
-        }
+      // TODO: Disabled elements should not respond to mouse events
       /* falls through */
       case 'topMouseOut':
       case 'topMouseOver':
@@ -56391,30 +56429,38 @@ typeof Set === 'function' && isNative(Set) &&
 // Set.prototype.keys
 Set.prototype != null && typeof Set.prototype.keys === 'function' && isNative(Set.prototype.keys);
 
+var setItem;
+var getItem;
+var removeItem;
+var getItemIDs;
+var addRoot;
+var removeRoot;
+var getRootIDs;
+
 if (canUseCollections) {
   var itemMap = new Map();
   var rootIDSet = new Set();
 
-  var setItem = function (id, item) {
+  setItem = function (id, item) {
     itemMap.set(id, item);
   };
-  var getItem = function (id) {
+  getItem = function (id) {
     return itemMap.get(id);
   };
-  var removeItem = function (id) {
+  removeItem = function (id) {
     itemMap['delete'](id);
   };
-  var getItemIDs = function () {
+  getItemIDs = function () {
     return Array.from(itemMap.keys());
   };
 
-  var addRoot = function (id) {
+  addRoot = function (id) {
     rootIDSet.add(id);
   };
-  var removeRoot = function (id) {
+  removeRoot = function (id) {
     rootIDSet['delete'](id);
   };
-  var getRootIDs = function () {
+  getRootIDs = function () {
     return Array.from(rootIDSet.keys());
   };
 } else {
@@ -56430,31 +56476,31 @@ if (canUseCollections) {
     return parseInt(key.substr(1), 10);
   };
 
-  var setItem = function (id, item) {
+  setItem = function (id, item) {
     var key = getKeyFromID(id);
     itemByKey[key] = item;
   };
-  var getItem = function (id) {
+  getItem = function (id) {
     var key = getKeyFromID(id);
     return itemByKey[key];
   };
-  var removeItem = function (id) {
+  removeItem = function (id) {
     var key = getKeyFromID(id);
     delete itemByKey[key];
   };
-  var getItemIDs = function () {
+  getItemIDs = function () {
     return Object.keys(itemByKey).map(getIDFromKey);
   };
 
-  var addRoot = function (id) {
+  addRoot = function (id) {
     var key = getKeyFromID(id);
     rootByKey[key] = true;
   };
-  var removeRoot = function (id) {
+  removeRoot = function (id) {
     var key = getKeyFromID(id);
     delete rootByKey[key];
   };
-  var getRootIDs = function () {
+  getRootIDs = function () {
     return Object.keys(rootByKey).map(getIDFromKey);
   };
 }
@@ -60910,7 +60956,7 @@ function warning(message) {
   /* eslint-enable no-empty */
 }
 },{}],335:[function(require,module,exports){
-;/*! showdown 11-11-2016 */
+;/*! showdown 21-12-2016 */
 (function(){
 /**
  * Created by Tivie on 13-07-2015.
@@ -60948,6 +60994,11 @@ function getDefaultOpts(simple) {
     simplifiedAutoLink: {
       defaultValue: false,
       describe: 'Turn on/off GFM autolink style',
+      type: 'boolean'
+    },
+    excludeTrailingPunctuationFromURLs: {
+      defaultValue: false,
+      describe: 'Excludes trailing punctuation from links generated with autoLinking',
       type: 'boolean'
     },
     literalMidWordUnderscores: {
@@ -60994,6 +61045,16 @@ function getDefaultOpts(simple) {
       defaultValue: false,
       description: 'Disables the requirement of indenting nested sublists by 4 spaces',
       type: 'boolean'
+    },
+    simpleLineBreaks: {
+      defaultValue: false,
+      description: 'Parses simple line breaks as <br> (GFM Style)',
+      type: 'boolean'
+    },
+    requireSpaceBeforeHeadingText: {
+      defaultValue: false,
+      description: 'Makes adding a space between `#` and the header text mandatory (GFM Style)',
+      type: 'boolean'
     }
   };
   if (simple === false) {
@@ -61022,13 +61083,16 @@ var showdown = {},
         omitExtraWLInCodeBlocks:              true,
         prefixHeaderId:                       'user-content-',
         simplifiedAutoLink:                   true,
+        excludeTrailingPunctuationFromURLs:   true,
         literalMidWordUnderscores:            true,
         strikethrough:                        true,
         tables:                               true,
         tablesHeaderId:                       true,
         ghCodeBlocks:                         true,
         tasklists:                            true,
-        disableForced4SpacesIndentedSublists: true
+        disableForced4SpacesIndentedSublists: true,
+        simpleLineBreaks:                     true,
+        requireSpaceBeforeHeadingText:        true
       },
       vanilla: getDefaultOpts(true)
     };
@@ -61736,7 +61800,7 @@ showdown.Converter = function (converterOptions) {
           outputModifiers.push(ext[i]);
           break;
       }
-      if (ext[i].hasOwnProperty(listeners)) {
+      if (ext[i].hasOwnProperty('listeners')) {
         for (var ln in ext[i].listeners) {
           if (ext[i].listeners.hasOwnProperty(ln)) {
             listen(ln, ext[i].listeners[ln]);
@@ -61877,6 +61941,9 @@ showdown.Converter = function (converterOptions) {
     // Standardize line endings
     text = text.replace(/\r\n/g, '\n'); // DOS to Unix
     text = text.replace(/\r/g, '\n'); // Mac to Unix
+
+    // Stardardize line spaces (nbsp causes trouble in older browsers and some regex flavors)
+    text = text.replace(/\u00A0/g, ' ');
 
     if (options.smartIndentationFix) {
       text = rTrimInputText(text);
@@ -62091,9 +62158,10 @@ showdown.subParser('autoLinks', function (text, options, globals) {
 
   text = globals.converter._dispatch('autoLinks.before', text, options, globals);
 
-  var simpleURLRegex  = /\b(((https?|ftp|dict):\/\/|www\.)[^'">\s]+\.[^'">\s]+)(?=\s|$)(?!["<>])/gi,
+  var simpleURLRegex  = /\b(((https?|ftp|dict):\/\/|www\.)[^'">\s]+\.[^'">\s]+)()(?=\s|$)(?!["<>])/gi,
+      simpleURLRegex2 = /\b(((https?|ftp|dict):\/\/|www\.)[^'">\s]+\.[^'">\s]+?)([.!?()]?)(?=\s|$)(?!["<>])/gi,
       delimUrlRegex   = /<(((https?|ftp|dict):\/\/|www\.)[^'">\s]+)>/gi,
-      simpleMailRegex = /(?:^|\s)([A-Za-z0-9!#$%&'*+-/=?^_`\{|}~\.]+@[-a-z0-9]+(\.[-a-z0-9]+)*\.[a-z]+)(?:$|\s)/gi,
+      simpleMailRegex = /(?:^|\s)([A-Za-z0-9!#$%&'*+-/=?^_`{|}~.]+@[-a-z0-9]+(\.[-a-z0-9]+)*\.[a-z]+)(?:$|\s)/gi,
       delimMailRegex  = /<(?:mailto:)?([-.\w]+@[-a-z0-9]+(\.[-a-z0-9]+)*\.[a-z]+)>/gi;
 
   text = text.replace(delimUrlRegex, replaceLink);
@@ -62102,20 +62170,28 @@ showdown.subParser('autoLinks', function (text, options, globals) {
   // Email addresses: <address@domain.foo>
 
   if (options.simplifiedAutoLink) {
-    text = text.replace(simpleURLRegex, replaceLink);
+    if (options.excludeTrailingPunctuationFromURLs) {
+      text = text.replace(simpleURLRegex2, replaceLink);
+    } else {
+      text = text.replace(simpleURLRegex, replaceLink);
+    }
     text = text.replace(simpleMailRegex, replaceMail);
   }
 
-  function replaceLink(wm, link) {
-    var lnkTxt = link;
+  function replaceLink(wm, link, m2, m3, trailingPunctuation) {
+    var lnkTxt = link,
+        append = '';
     if (/^www\./i.test(link)) {
       link = link.replace(/^www\./i, 'http://www.');
     }
-    return '<a href="' + link + '">' + lnkTxt + '</a>';
+    if (options.excludeTrailingPunctuationFromURLs && trailingPunctuation) {
+      append = trailingPunctuation;
+    }
+    return '<a href="' + link + '">' + lnkTxt + '</a>' + append;
   }
 
-  function replaceMail(wholeMatch, m1) {
-    var unescapedStr = showdown.subParser('unescapeSpecialChars')(m1);
+  function replaceMail(wholeMatch, mail) {
+    var unescapedStr = showdown.subParser('unescapeSpecialChars')(mail);
     return showdown.subParser('encodeEmailAddress')(unescapedStr);
   }
 
@@ -62140,9 +62216,9 @@ showdown.subParser('blockGamut', function (text, options, globals) {
 
   // Do Horizontal Rules:
   var key = showdown.subParser('hashBlock')('<hr />', options, globals);
-  text = text.replace(/^[ ]{0,2}([ ]?\*[ ]?){3,}[ \t]*$/gm, key);
-  text = text.replace(/^[ ]{0,2}([ ]?\-[ ]?){3,}[ \t]*$/gm, key);
-  text = text.replace(/^[ ]{0,2}([ ]?_[ ]?){3,}[ \t]*$/gm, key);
+  text = text.replace(/^ {0,2}( ?-){3,}[ \t]*$/gm, key);
+  text = text.replace(/^ {0,2}( ?\*){3,}[ \t]*$/gm, key);
+  text = text.replace(/^ {0,2}( ?_){3,}[ \t]*$/gm, key);
 
   text = showdown.subParser('lists')(text, options, globals);
   text = showdown.subParser('codeBlocks')(text, options, globals);
@@ -62614,7 +62690,7 @@ showdown.subParser('hashHTMLSpans', function (text, config, globals) {
   var matches = showdown.helper.matchRecursiveRegExp(text, '<code\\b[^>]*>', '</code>', 'gi');
 
   for (var i = 0; i < matches.length; ++i) {
-    text = text.replace(matches[i][0], '~L' + (globals.gHtmlSpans.push(matches[i][0]) - 1) + 'L');
+    text = text.replace(matches[i][0], '~C' + (globals.gHtmlSpans.push(matches[i][0]) - 1) + 'C');
   }
   return text;
 });
@@ -62626,7 +62702,7 @@ showdown.subParser('unhashHTMLSpans', function (text, config, globals) {
   'use strict';
 
   for (var i = 0; i < globals.gHtmlSpans.length; ++i) {
-    text = text.replace('~L' + i + 'L', globals.gHtmlSpans[i]);
+    text = text.replace('~C' + i + 'C', globals.gHtmlSpans[i]);
   }
 
   return text;
@@ -62690,7 +62766,9 @@ showdown.subParser('headers', function (text, options, globals) {
   //  ...
   //  ###### Header 6
   //
-  text = text.replace(/^(#{1,6})[ \t]*(.+?)[ \t]*#*\n+/gm, function (wholeMatch, m1, m2) {
+  var atxStyle = (options.requireSpaceBeforeHeadingText) ? /^(#{1,6})[ \t]+(.+?)[ \t]*#*\n+/gm : /^(#{1,6})[ \t]*(.+?)[ \t]*#*\n+/gm;
+
+  text = text.replace(atxStyle, function (wholeMatch, m1, m2) {
     var span = showdown.subParser('spanGamut')(m2, options, globals),
         hID = (options.noHeaderId) ? '' : ' id="' + headerId(m2) + '"',
         hLevel = headerLevelStart - 1 + m1.length,
@@ -62831,8 +62909,8 @@ showdown.subParser('italicsAndBold', function (text, options, globals) {
  */
 showdown.subParser('lists', function (text, options, globals) {
   'use strict';
-
   text = globals.converter._dispatch('lists.before', text, options, globals);
+
   /**
    * Process the contents of a single ordered or unordered list, splitting it
    * into individual list items.
@@ -62898,6 +62976,18 @@ showdown.subParser('lists', function (text, options, globals) {
         });
       }
 
+      // ISSUE #312
+      // This input: - - - a
+      // causes trouble to the parser, since it interprets it as:
+      // <ul><li><li><li>a</li></li></li></ul>
+      // instead of:
+      // <ul><li>- - a</li></ul>
+      // So, to prevent it, we will put a marker (~A)in the beginning of the line
+      // Kind of hackish/monkey patching, but seems more effective than overcomplicating the list parser
+      item = item.replace(/^([-*+]|\d\.)[ \t]+[\S\n ]*/g, function (wm2) {
+        return '~A' + wm2;
+      });
+
       // m1 - Leading line or
       // Has a double return (multi paragraph) or
       // Has sublist
@@ -62908,13 +62998,20 @@ showdown.subParser('lists', function (text, options, globals) {
         // Recursion for sub-lists:
         item = showdown.subParser('lists')(item, options, globals);
         item = item.replace(/\n$/, ''); // chomp(item)
+        item = showdown.subParser('hashHTMLBlocks')(item, options, globals);
+        item = item.replace(/\n\n+/g, '\n\n');
         if (isParagraphed) {
           item = showdown.subParser('paragraphs')(item, options, globals);
         } else {
           item = showdown.subParser('spanGamut')(item, options, globals);
         }
       }
+
+      // now we need to remove the marker (~A)
+      item = item.replace('~A', '');
+      // we can finally wrap the line in list item tags
       item =  '<li' + bulletStyle + '>' + item + '</li>\n';
+
       return item;
     });
 
@@ -62991,7 +63088,6 @@ showdown.subParser('lists', function (text, options, globals) {
 
   // strip sentinel
   text = text.replace(/~0/, '');
-
   text = globals.converter._dispatch('lists.after', text, options, globals);
   return text;
 });
@@ -63125,8 +63221,14 @@ showdown.subParser('spanGamut', function (text, options, globals) {
   text = showdown.subParser('italicsAndBold')(text, options, globals);
   text = showdown.subParser('strikethrough')(text, options, globals);
 
-  // Do hard breaks:
-  text = text.replace(/  +\n/g, ' <br />\n');
+  // Do hard breaks
+  if (options.simpleLineBreaks) {
+    // GFM style hard breaks
+    text = text.replace(/\b\n\b/g, '<br />\n');
+  } else {
+    // Vanilla hard breaks
+    text = text.replace(/\b  +\n\b/g, '<br />\n');
+  }
 
   text = globals.converter._dispatch('spanGamut.after', text, options, globals);
   return text;
